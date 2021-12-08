@@ -10,3 +10,5 @@ def init_app(app: Flask):
     app.db = db
 
     from app.models.technician_model import TechnicianModel
+    # from app.models.companies_model import CompanyModel
+    # from app.models.key_model import KeysModel
