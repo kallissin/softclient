@@ -8,7 +8,7 @@ class CompanyModel(db.Model):
     id: int
     cnpj: str
     trading_name: str
-    company_name: int
+    company_name: str
     key_id: str
 
     __tablename__ = 'companies'
