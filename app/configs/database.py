@@ -13,3 +13,4 @@ def init_app(app: Flask):
     from app.models.companies_model import CompanyModel
     from app.models.key_model import KeysModel
     from app.models.user_model import UserModel
+    from app.models.order_model import OrderModel
