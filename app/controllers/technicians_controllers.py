@@ -130,4 +130,8 @@ def delete_technician(id: int):
         return {"Error": "Technician not found."}, 404
 
 
+def test():
+    return "ok", 200
+
+
 
