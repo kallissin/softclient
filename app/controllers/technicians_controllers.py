@@ -5,11 +5,19 @@ import psycopg2
 from werkzeug.exceptions import NotFound, BadRequest
 
 
+
 def create_technician():
     try:
         data = request.get_json()
 
         if data["name"] and data["email"] and data["password"] and data["registration"]:
+
+            if type(data["registration"]) != int:
+                raise TypeError("the registration must be of the int type")
+            
+            if type(data["name"]) != str or type(data["email"]) != str or \
+                    type(data["password"]) != str:
+                raise TypeError("name, email and password key values ​​must be of type string.")
 
             data["name"] = data["name"].title()
             data["email"] = data["email"].lower()
@@ -32,12 +40,17 @@ def create_technician():
             "Error": "It is mandatory to pass the name, email, password and registration keys."
         }, 400
 
+    except BadRequest:
+        return {"Error": "Syntax error!"}, 400
+
+    except TypeError as e:
+        return {"Error": str(e)}, 400
+
+
 
 
 def get_technicians():
-
     technicians = TechnicianModel.query.all()
-
     return jsonify(technicians), 200
 
 
@@ -49,6 +62,7 @@ def get_technician_by_id(id: int):
         return jsonify(technician), 200
     except NotFound:
         return {"Error": "Technician not found."}, 404
+
 
 
 
@@ -99,5 +113,20 @@ def update_technician(id: int):
 
     except BadRequest:
         return {"Error": "Syntax error!"}, 400
+
+
+
+
+def delete_technician(id: int):
+    try:
+        technician = TechnicianModel.query.get_or_404(id)
+
+        current_app.db.session.delete(technician)
+        current_app.db.session.commit()
+
+        return jsonify(technician), 200
+
+    except NotFound:
+        return {"Error": "Technician not found."}, 404
 
 
