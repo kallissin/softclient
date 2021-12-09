@@ -1,5 +1,5 @@
 from flask import request, current_app, jsonify
-from app.exceptions.companies_exceptions import CNPJFormatError, InvalidTokenError, InvalidIDError
+from app.exceptions.companies_exceptions import CNPJExistsError, CNPJFormatError, CompanyNameExistsError, InvalidIDError, TradingNameExistsError
 from app.utils.cnpj_validator import is_cnpj_valid, cnpj_formatter
 from app.models.companies_model import CompanyModel
 from app.models.key_model import KeysModel
@@ -60,13 +60,27 @@ def create_company():
 
     data = request.get_json()
     cnpj_check = is_cnpj_valid(data['cnpj'])
+    checklist = [ data['cnpj'], data['trading_name'].title(), data['company_name'].title() ]
     
     
     try:
         if not cnpj_check:
             print(cnpj_check)
             raise CNPJFormatError
-
+        
+        
+        cnpj_exists_check = CompanyModel.query.filter_by(cnpj = checklist[0]).first()
+        if cnpj_exists_check:
+            raise CNPJExistsError
+        
+        trading_name_check = CompanyModel.query.filter_by(trading_name = checklist[1]).first()
+        if trading_name_check:
+            raise TradingNameExistsError
+        
+        company_name_check = CompanyModel.query.filter_by(company_name = checklist[2]).first()
+        if company_name_check:        
+            raise CompanyNameExistsError
+            
         data = {
             "cnpj": data['cnpj'],
             "trading_name": data['trading_name'].title(),
@@ -82,6 +96,12 @@ def create_company():
         session.commit()
         
     except CNPJFormatError as err:
+        return err.message
+    except CNPJExistsError as err:
+        return err.message
+    except TradingNameExistsError as err:
+        return err.message
+    except CompanyNameExistsError as err:
         return err.message    
     
     return jsonify({

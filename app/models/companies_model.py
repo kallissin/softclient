@@ -18,7 +18,7 @@ class CompanyModel(db.Model):
     id = Column(Integer, primary_key=True)
     cnpj = Column(String(18), nullable=False)
     trading_name = Column(String, nullable=False, unique=True)
-    company_name = Column(String, nullable=False)
+    company_name = Column(String, nullable=False, unique=True)
     username = Column(String(150), nullable=True)
     password = Column(String, nullable=True)
     role = Column(String(150), nullable=True)

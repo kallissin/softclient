@@ -15,10 +15,26 @@ class InvalidIDError(Exception):
             "error": "Company ID does not exist."
         }, 400
         
-class InvalidTokenError(Exception):
+class CNPJExistsError(Exception):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.message = {
-            "error": "The provided token is invalid or does not exist."
-        }, 404        
+            "error": "The provided CNPJ already exists."
+        }, 400        
+        
+class TradingNameExistsError(Exception):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.message = {
+            "error": "The provided Trading Name already exists."
+        }, 400                
+        
+class CompanyNameExistsError(Exception):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.message = {
+            "error": "The provided Company Name already exists."
+        }, 400                
