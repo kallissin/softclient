@@ -24,7 +24,7 @@ class UserModel(db.Model):
     email = Column(String, unique=True, nullable=False)
     password_hash = Column(String, nullable=False)
     birthdate = Column(Date)
-    registration = Column(Integer, nullable=False)
+    registration = Column(Integer, unique=True, nullable=False)
     role = Column(String(150), nullable=False)
     company_id = Column(Integer, ForeignKey('companies.id'), nullable=False)
 

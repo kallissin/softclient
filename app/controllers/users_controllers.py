@@ -32,7 +32,7 @@ def create_user():
         return jsonify(err.message), err.code
     except IntegrityError as err:
         if isinstance(err.orig, UniqueViolation):
-            return jsonify({"message": "email already exists"}), HTTPStatus.CONFLICT
+            return jsonify({"message": str(err.orig).split('\n')[1]}), HTTPStatus.CONFLICT
     except InvalidBirthDateError as err:
         return jsonify({"message": str(err)}), HTTPStatus.BAD_REQUEST
 
