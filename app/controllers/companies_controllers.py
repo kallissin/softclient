@@ -35,7 +35,9 @@ def get_one(company_id: int):
         "trading_name": company.trading_name,
         "company_name": company.company_name,
     }), 200
-       
+
+
+# DELETES A SINGLE COMPANY BY ID       
 def delete_company(company_id: int):
     try:
         query = CompanyModel.query.get(company_id)
@@ -51,12 +53,12 @@ def delete_company(company_id: int):
     except InvalidIDError as err:
         return err.message      
        
-# CREATES A SINGLE COMPANY - REQUIRES TOKEN (key_id)       
+       
+# CREATES A SINGLE COMPANY      
 def create_company():
     session = current_app.db.session
 
     data = request.get_json()
-    find_key = KeysModel.query.filter_by(key = data['key_id']).first()
     cnpj_check = is_cnpj_valid(data['cnpj'])
     
     
@@ -64,13 +66,16 @@ def create_company():
         if not cnpj_check:
             print(cnpj_check)
             raise CNPJFormatError
-        
-        if not find_key:
-            raise InvalidTokenError
 
-        data['trading_name'] = data['trading_name'].title()
-        data['company_name'] = data['company_name'].title()
-        data['key_id'] = find_key.id 
+        data = {
+            "cnpj": data['cnpj'],
+            "trading_name": data['trading_name'].title(),
+            "company_name": data['company_name'].title(),
+            "username": None,
+            "password": None,
+            "role": None
+        }
+        
         new_company = CompanyModel(**data)
 
         session.add(new_company)
@@ -78,13 +83,10 @@ def create_company():
         
     except CNPJFormatError as err:
         return err.message    
-    except InvalidTokenError as err:
-        return err.message    
-
+    
     return jsonify({
         "id": new_company.id,
         "cnpj": cnpj_formatter(new_company.cnpj),
         "trading_name": new_company.trading_name,
         "company_name": new_company.company_name,
-        "key": data['key_id']
     }), 201

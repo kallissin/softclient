@@ -4,7 +4,7 @@ class CNPJFormatError(Exception):
 
         self.message = {
             "error": "CNPJ must have 14 digits."
-        }, 404
+        }, 400
 
 
 class InvalidIDError(Exception):
@@ -13,7 +13,7 @@ class InvalidIDError(Exception):
 
         self.message = {
             "error": "Company ID does not exist."
-        }, 404
+        }, 400
         
 class InvalidTokenError(Exception):
     def __init__(self, *args, **kwargs):
