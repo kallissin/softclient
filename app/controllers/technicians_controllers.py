@@ -131,7 +131,7 @@ def delete_technician(id: int):
 
 
 def test():
-    return "ok", 200
+    return {"ok": "test"}, 200
 
 
 
