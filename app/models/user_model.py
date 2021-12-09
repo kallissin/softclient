@@ -8,6 +8,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 class UserModel(db.Model):
     id: int
     name: str
+    email: str
     birthdate: str
     registration: int
     role: str
