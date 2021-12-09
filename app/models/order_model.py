@@ -1,6 +1,9 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, Enum
+from sqlalchemy import Column, Integer, String, Float, DateTime, Enum, ForeignKey
+from sqlalchemy.orm import backref, relationship
 from app.configs.database import db
 from dataclasses import dataclass
+from app.models.user_model import UserModel
+from app.models.technician_model import TechnicianModel
 import enum
 
 
@@ -25,8 +28,7 @@ class OrderModel(db.Model):
     release_date: str
     update_date: str
     solution: str
-    user_id: int
-    technician_id: int
+    user: UserModel
 
     __tablename__ = 'orders'
 
@@ -37,5 +39,17 @@ class OrderModel(db.Model):
     release_date = Column(DateTime, nullable=False)
     update_date = Column(DateTime, nullable=False)
     solution = Column(String)
-    user_id = Column(Integer, nullable=False)
-    technician_id = Column(Integer)
+    user_id = Column(
+      Integer,
+      ForeignKey("users.id"),
+      nullable=False
+    )
+    technician_id = Column(
+      Integer,
+      ForeignKey("technicians.id")
+    )
+    
+    user = relationship("UserModel", backref="orders", uselist=False)
+    
+
+   
