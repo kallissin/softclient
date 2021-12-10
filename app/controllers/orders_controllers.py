@@ -8,7 +8,7 @@ def list_orders():
 
 def create_order():
     data = request.json
-    new_data = OrderModel.data_time(data)
+    new_data = OrderModel.create_order_data(data)
     order = OrderModel(**new_data)
     current_app.db.session.add(order)
     current_app.db.session.commit()

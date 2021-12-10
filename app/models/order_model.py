@@ -53,10 +53,11 @@ class OrderModel(db.Model):
     
     
     @staticmethod
-    def data_time(data: dict):
+    def create_order_data(data: dict):
         current_time = datetime.utcnow()
         data['release_date'] = current_time
-        data['update_time'] = current_time
+        data['solution'] = ""
+        data['update_date'] = current_time
         return data
     
 
