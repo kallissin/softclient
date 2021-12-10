@@ -3,6 +3,7 @@ from app.models.technician_model import TechnicianModel
 import sqlalchemy
 import psycopg2
 from werkzeug.exceptions import NotFound, BadRequest
+from app.utils.cnpj_validator import cnpj_formatter
 
 
 
@@ -130,8 +131,36 @@ def delete_technician(id: int):
         return {"Error": "Technician not found."}, 404
 
 
-def test():
-    return {"ok": "test"}, 200
+
+
+def get_orders_by_technician(id: int):
+    try:
+        technician = TechnicianModel.query.get_or_404(id)
+
+        return jsonify([{
+            "id": order.id,
+            "type": order.type.value,
+            "status": order.status.value,
+            "description": order.description,
+            "release_date": order.release_date,
+            "update_date": order.update_date,
+            "solution": order.solution,
+            "user": {
+                "id": order.user.id,
+                "name": order.user.name,
+                "email": order.user.email,
+                "registration": order.user.registration,
+                "role": order.user.role,
+                "company": {
+                    "id": order.user.company.id,
+                    "cnpj": cnpj_formatter(order.user.company.cnpj),
+                    "trading_name": order.user.company.trading_name
+                }
+            },
+        } for order in technician.orders]), 200
+
+    except NotFound:
+        return {"Error": "Technician not found."}, 404
 
 
 
