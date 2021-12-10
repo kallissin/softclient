@@ -2,7 +2,6 @@ from app.configs.database import db
 from sqlalchemy import Column, String, Integer, Date
 from dataclasses import dataclass
 from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy.orm import relationship
 
 
 @dataclass

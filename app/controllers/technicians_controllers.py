@@ -4,6 +4,9 @@ import sqlalchemy
 import psycopg2
 from werkzeug.exceptions import NotFound, BadRequest
 from app.utils.cnpj_validator import cnpj_formatter
+from app.utils.format_date import format_datetime
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from werkzeug.exceptions import Unauthorized
 
 
 
@@ -28,7 +31,14 @@ def create_technician():
             current_app.db.session.add(technician)
             current_app.db.session.commit()
 
-            return jsonify(technician), 200
+            return jsonify({
+                "id": technician.id,
+                "name": technician.name,
+                "email": technician.email,
+                "registration": technician.registration,
+                "birthdate": format_datetime(technician.birthdate)
+            }), 200
+            
         else:
             raise KeyError
 
@@ -52,7 +62,13 @@ def create_technician():
 
 def get_technicians():
     technicians = TechnicianModel.query.all()
-    return jsonify(technicians), 200
+    return jsonify([{
+        "id": technician.id,
+        "name": technician.name,
+        "email": technician.email,
+        "registration": technician.registration,
+        "birthdate": format_datetime(technician.birthdate)
+    } for technician in technicians]), 200
 
 
 
@@ -60,13 +76,14 @@ def get_technicians():
 def get_technician_by_id(id: int):
     try:
         technician = TechnicianModel.query.get_or_404(id)
+        technician.birthdate = format_datetime(technician.birthdate)
         return jsonify(technician), 200
     except NotFound:
         return {"Error": "Technician not found."}, 404
 
 
 
-
+@jwt_required()
 def update_technician(id: int):
     try:
         data = request.get_json()
@@ -95,7 +112,13 @@ def update_technician(id: int):
         current_app.db.session.add(technician)
         current_app.db.session.commit()
 
-        return jsonify(technician), 200
+        return jsonify({
+            "id": technician.id,
+            "name": technician.name,
+            "email": technician.email,
+            "registration": technician.registration,
+            "birthdate": format_datetime(technician.birthdate)
+        }), 200
 
     except NotFound:
         return {"Error": "Technician not found."}, 404
@@ -117,15 +140,31 @@ def update_technician(id: int):
 
 
 
-
+@jwt_required()
 def delete_technician(id: int):
+
+    token_compare = get_jwt_identity()
+
     try:
         technician = TechnicianModel.query.get_or_404(id)
 
-        current_app.db.session.delete(technician)
-        current_app.db.session.commit()
+        if id == token_compare["id"]:
+            print("ok")
 
-        return jsonify(technician), 200
+            current_app.db.session.delete(technician)
+            current_app.db.session.commit()
+
+            # technician.birthdate = format_datetime(technician.birthdate)
+
+            return jsonify(technician), 200
+
+            # return jsonify({
+            #     "id": technician.id,
+            #     "name": technician.name,
+            #     "email": technician.email,
+            #     "registration": technician.registration,
+            #     "birthdate": format_datetime(technician.birthdate)
+            # }), 200
 
     except NotFound:
         return {"Error": "Technician not found."}, 404
@@ -161,6 +200,30 @@ def get_orders_by_technician(id: int):
 
     except NotFound:
         return {"Error": "Technician not found."}, 404
+
+
+
+def login():
+    try:
+        data = request.get_json()
+
+        technician = TechnicianModel.query.filter_by(email=data['email']).first()
+
+        if technician.check_password(data['password']):
+            token = create_access_token(technician)
+            return jsonify({"token": token}), 200
+        else:
+            raise Unauthorized
+
+    except (AttributeError, Unauthorized):
+        return {"message": "Incorrect email or password."}, 401
+    
+    except BadRequest:
+        return {"Error": "Syntax error!"}, 400
+    
+    except KeyError:
+        return {"Error": "Login needs email and password keys."}, 400
+
 
 
 
