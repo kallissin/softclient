@@ -2,7 +2,7 @@ from flask import request, current_app, jsonify
 from app.exceptions.companies_exceptions import CNPJExistsError, CNPJFormatError, CompanyNameExistsError, InvalidIDError, TradingNameExistsError
 from app.utils.cnpj_validator import is_cnpj_valid, cnpj_formatter
 from app.models.companies_model import CompanyModel
-from app.models.key_model import KeysModel
+
 
 # RETURNS ALL COMPANIES
 def get_all():
