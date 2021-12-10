@@ -1,7 +1,6 @@
 from flask import jsonify, request, current_app
 from sqlalchemy.sql.functions import user
 from app.models.order_model import OrderModel
-from pdb import set_trace
 from http import HTTPStatus
 from werkzeug.exceptions import NotFound
 from app.utils.format_date import format_datetime
