@@ -1,10 +1,10 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, Enum, ForeignKey
-from sqlalchemy.orm import backref, relationship
+from sqlalchemy import Column, Integer, String, DateTime, Enum, ForeignKey
+from sqlalchemy.orm import relationship
 from app.configs.database import db
 from dataclasses import dataclass
 from app.models.user_model import UserModel
-from app.models.technician_model import TechnicianModel
 import enum
+from datetime import datetime
 
 
 class EnumStatus(enum.Enum):
@@ -50,6 +50,14 @@ class OrderModel(db.Model):
     )
     
     user = relationship("UserModel", backref="orders", uselist=False)
+    
+    
+    @staticmethod
+    def data_time(data: dict):
+        current_time = datetime.utcnow()
+        data['release_date'] = current_time
+        data['update_time'] = current_time
+        return data
     
 
    
