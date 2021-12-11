@@ -58,3 +58,10 @@ class UserModel(db.Model):
         for key in list_keys:
             if not key in list(data.keys()):
                 raise KeyTypeError(data)
+    
+    @staticmethod
+    def format_data(data: dict):
+        data['name'] = data['name'].title() 
+        data['email'] = data['email'].lower()
+
+        return data
