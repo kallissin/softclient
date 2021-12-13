@@ -2,7 +2,7 @@ class InvalidBirthDateError(Exception):
     ...
 
 class KeyTypeError(Exception):
-    list_keys = ["name", "email", "password", "registration", "role", "company_id"]
+    list_keys = ["name", "email", "password", "active", "role", "company_id"]
 
     def __init__(self, data: dict):
         self.message = {

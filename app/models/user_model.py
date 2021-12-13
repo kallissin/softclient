@@ -54,7 +54,7 @@ class UserModel(db.Model):
     
     @staticmethod
     def validate_keys(data: dict):
-        list_keys = ["name", "email", "password", "registration", "role", "company_id"]
+        list_keys = ["name", "email", "password", "active", "role", "company_id"]
         for key in list_keys:
             if not key in list(data.keys()):
                 raise KeyTypeError(data)
