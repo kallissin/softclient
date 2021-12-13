@@ -46,8 +46,7 @@ class OrderModel(db.Model):
     )
     technician_id = Column(
       Integer,
-      ForeignKey("technicians.id"),
-      nullable=False  
+      ForeignKey("technicians.id")
     )
     
     user = relationship("UserModel", backref="orders", uselist=False)
