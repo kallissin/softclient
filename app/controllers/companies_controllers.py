@@ -3,6 +3,7 @@ from app.exceptions.companies_exceptions import CNPJExistsError, CNPJFormatError
 from app.utils.cnpj_validator import is_cnpj_valid, cnpj_formatter
 from app.models.companies_model import CompanyModel
 from app.models.user_model import UserModel
+from flask_jwt_extended import jwt_required
 
 
 # RETURNS ALL COMPANIES
@@ -24,12 +25,12 @@ def get_all():
     return jsonify(new_list)
 
 
+
 # RETURNS A SINGLE COMPANY BY ID
 def get_one(company_id: int):
     company = CompanyModel.query.filter_by(id = company_id).first()
     users = UserModel.query.filter_by(company_id = company.id).all()
 
-    
     if not company:
         return { "error": "Company not found."}, 404
     
@@ -41,6 +42,7 @@ def get_one(company_id: int):
         "users": list(users)
     }), 200
     
+
 
 # GETS ALL USERS OF A GIVEN COMPANY         
 def get_company_users(company_id: int):
@@ -70,7 +72,77 @@ def delete_company(company_id: int):
     
     except InvalidIDError as err:
         return err.message      
-       
+
+
+
+# UPDATES COMPANY
+@jwt_required()
+def update_company(company_id: int):
+    session = current_app.db.session
+
+    try:
+        data = request.get_json()
+        company = CompanyModel.query.get(company_id)
+        
+        if not company:
+            raise InvalidIDError
+        
+        keys = ["cnpj", "trading_name", "company_name", "role", "username", "password"]
+            
+        for key, value in data.items():
+            if key in keys:
+
+                if key == "cnpj":
+                    cnpj_check = is_cnpj_valid(value)                    
+                    cnpj_exists_check = CompanyModel.query.filter_by(cnpj = key).first()
+                    if not cnpj_check:
+                        raise CNPJFormatError
+                    if cnpj_exists_check:
+                        raise CNPJExistsError
+                        
+                if key == "trading_name":
+                    value = value.title()
+                    trading_name_check = CompanyModel.query.filter_by(trading_name = value).first()
+                    if trading_name_check:
+                        raise TradingNameExistsError
+
+                if key == "company_name":
+                    value = value.title()
+                    company_name_check = CompanyModel.query.filter_by(company_name = value).first()
+                    if company_name_check:        
+                        raise CompanyNameExistsError
+
+                setattr(company, key, value)
+            else:
+                raise KeyError
+
+        session.add(company)
+        session.commit()
+
+        return jsonify({
+            "id": company.id,
+            "cnpj": cnpj_formatter(company.cnpj),
+            "trading_name": company.trading_name,
+            "company_name": company.company_name,
+    }), 200
+
+    except InvalidIDError as err:
+        return err.message
+    except CNPJFormatError as err:
+        return err.message
+    except CNPJExistsError as err:
+        return err.message
+    except TradingNameExistsError as err:
+        return err.message
+    except CompanyNameExistsError as err:
+        return err.message 
+    except KeyError:
+        return {
+            "Error": f"Allowed keys are: {keys}"
+        }, 400
+        
+        
+        
        
 # CREATES A SINGLE COMPANY      
 def create_company():
@@ -80,10 +152,8 @@ def create_company():
     cnpj_check = is_cnpj_valid(data['cnpj'])
     checklist = [ data['cnpj'], data['trading_name'].title(), data['company_name'].title() ]
     
-    
     try:
         if not cnpj_check:
-            print(cnpj_check)
             raise CNPJFormatError
         
         
