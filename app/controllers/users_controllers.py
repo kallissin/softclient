@@ -7,7 +7,7 @@ from werkzeug.exceptions import NotFound
 from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from flask_jwt_extended import create_access_token, jwt_required
-from utils.permission import only_role
+from app.utils.permission import only_role
 
 
 def format_datetime(date):
@@ -31,7 +31,6 @@ def create_user():
             "name": user.name,
             "email": user.email,
             "birthdate": format_datetime(user.birthdate),
-            "registration": user.registration,
             "role": user.role,
             "company_name": user.company.company_name
         }), HTTPStatus.CREATED
@@ -56,7 +55,6 @@ def get_all_users():
         "name": user.name,
         "email": user.email,
         "birthdate": user.birthdate,
-        "registration": user.registration,
         "role": user.role,
         "company": {
             "id": user.company.id,
@@ -75,7 +73,6 @@ def get_user_by_id(user_id):
             "name": user.name,
             "email": user.email,
             "birthdate": format_datetime(user.birthdate),
-            "registration": user.registration,
             "role": user.role,
             "company": {
             "id": user.company.id,
@@ -96,7 +93,6 @@ def get_user_by_name(user_name):
             "name": user.name,
             "email": user.email,
             "birthdate": format_datetime(user.birthdate),
-            "registration": user.registration,
             "role": user.role,
             "company": {
             "id": user.company.id,
@@ -124,7 +120,6 @@ def update_user(user_id):
             "name": user.name,
             "email": user.email,
             "birthdate": format_datetime(user.birthdate),
-            "registration": user.registration,
             "role": user.role,
             "company_name": user.company.company_name
         }), HTTPStatus.OK
