@@ -1,1 +1,2 @@
-# technicians_exceptions
+class InvalidKeyError(Exception):
+    ...

@@ -1,4 +1,8 @@
+from datetime import date, datetime
 from flask import request, jsonify, current_app
+from sqlalchemy.sql.elements import Null
+from sqlalchemy.sql.sqltypes import DATE, DateTime
+from app.exceptions.technicians_exceptions import InvalidKeyError
 from app.models.technician_model import TechnicianModel
 import sqlalchemy
 import psycopg2
@@ -14,19 +18,15 @@ def create_technician():
     try:
         data = request.get_json()
 
-        keys = ["name", "email", "password", "birthdate"]
-
         if data["name"] and data["email"] and data["password"]:
-            
-            # if type(data["name"]) != str or type(data["email"]) != str or \
-            #         type(data["password"]) != str:
-            #     raise TypeError("name, email and password key values ​​must be of type string.")
-            
+
+            keys = ["name", "email", "password", "birthdate"]
+
             for key, value in data.items():
                 if not key in keys:
-                    raise KeyError('Only name, email, password and birthday keys are accepted.') 
+                    raise InvalidKeyError
                 if type(value) != str:
-                    raise TypeError 
+                    raise TypeError
 
             data["name"] = data["name"].title()
             data["email"] = data["email"].lower()
@@ -36,26 +36,21 @@ def create_technician():
             current_app.db.session.add(technician)
             current_app.db.session.commit()
 
-            # technician.birthdate = format_datetime(technician.birthdate)
-
-            # return jsonify(technician), 200
-
-            return jsonify({
-                "id": technician.id,
-                "name": technician.name,
-                "email": technician.email,
-                "birthdate": format_datetime(technician.birthdate)
-            }), 200
-            
         else:
-            raise KeyError("It is mandatory to pass the name, email, and password keys.")
+            raise KeyError
+
+        for key, value in data.items():
+            if key == "birthdate":
+                technician.birthdate = format_datetime(technician.birthdate)
+
+        return jsonify(technician), 200
 
     except sqlalchemy.exc.IntegrityError as e:
         if type(e.orig) == psycopg2.errors.UniqueViolation:
             return {"Error": "Technician already exists!"}, 409
 
-    except KeyError as e:
-        return {"Error": str(e)}, 400
+    except KeyError:
+        return {"Error": "It is mandatory to pass the name, email, and password keys."}, 400
 
     except BadRequest:
         return {"Error": "Syntax error!"}, 400
@@ -63,18 +58,23 @@ def create_technician():
     except TypeError:
         return {"Error": "values ​​must be of type string"}, 400
 
+    except InvalidKeyError:
+        return {"Error": "Only name, email, password and birthday keys are accepted."}, 400
+
+    except sqlalchemy.exc.DataError as e:
+        if type(e.orig) == psycopg2.errors.InvalidDatetimeFormat:
+            return {"Error": "Formato de data inválida. Use: (%d/%m/%Y)"}
+    
 
 
 
 def get_technicians():
-    technicians = TechnicianModel.query.all()
-    return jsonify([{
-        "id": technician.id,
-        "name": technician.name,
-        "email": technician.email,
-        "registration": technician.registration,
-        "birthdate": format_datetime(technician.birthdate)
-    } for technician in technicians]), 200
+    technicians = TechnicianModel.query.order_by(TechnicianModel.id.desc()).all()
+    for technician in technicians:
+        if technician.birthdate != None:
+            technician.birthdate = format_datetime(technician.birthdate)
+    return jsonify(technicians), 200
+    
 
 
 
@@ -82,8 +82,12 @@ def get_technicians():
 def get_technician_by_id(id: int):
     try:
         technician = TechnicianModel.query.get_or_404(id)
-        technician.birthdate = format_datetime(technician.birthdate)
+
+        if technician.birthdate != None:
+            technician.birthdate = format_datetime(technician.birthdate)
+
         return jsonify(technician), 200
+
     except NotFound:
         return {"Error": "Technician not found."}, 404
 
@@ -133,9 +137,9 @@ def update_technician(id: int):
             data = request.get_json()
 
             technician = TechnicianModel.query.get_or_404(id)
-            
+
             keys = ["name", "email", "password", "birthdate"]
-                
+
             for key, value in data.items():
 
                 if key in keys:
@@ -149,7 +153,7 @@ def update_technician(id: int):
                     setattr(technician, key, value)
                 else:
                     raise KeyError
-                
+
                 if type(value) != str:
                     raise TypeError
 
@@ -165,11 +169,11 @@ def update_technician(id: int):
 
     except NotFound:
         return {"Error": "Technician not found."}, 404
-    
+
     except sqlalchemy.exc.IntegrityError as e:
         if type(e.orig) == psycopg2.errors.UniqueViolation:
             return {"Error": "existing email"}, 409
-    
+
     except KeyError:
         return {
             "Error": "keys who can be updated: name, email, password, birthdate."
@@ -186,38 +190,29 @@ def update_technician(id: int):
             "Error": "it is not allowed to update information from other technicians."
         }, 401
 
+    except sqlalchemy.exc.DataError as e:
+        if type(e.orig) == psycopg2.errors.InvalidDatetimeFormat:
+            return {"Error": "Formato de data inválida. Use: (%d/%m/%Y)"}
 
 
 
 
-@jwt_required()
+
 def delete_technician(id: int):
-
-    token_compared = get_jwt_identity()
-
     try:
         technician = TechnicianModel.query.get_or_404(id)
 
-        if id == token_compared["id"]:
-            print("ok")
+        current_app.db.session.delete(technician)
+        current_app.db.session.commit()
 
-            current_app.db.session.delete(technician)
-            current_app.db.session.commit()
+        if technician.birthdate != None:
+            technician.birthdate = format_datetime(technician.birthdate)
 
-            # technician.birthdate = format_datetime(technician.birthdate)
-
-            return jsonify(technician), 200
-
-            # return jsonify({
-            #     "id": technician.id,
-            #     "name": technician.name,
-            #     "email": technician.email,
-            #     "registration": technician.registration,
-            #     "birthdate": format_datetime(technician.birthdate)
-            # }), 200
-
+        return jsonify(technician), 200
+    
     except NotFound:
         return {"Error": "Technician not found."}, 404
+
 
 
 
@@ -236,10 +231,10 @@ def login():
 
     except (AttributeError, Unauthorized):
         return {"message": "Incorrect email or password."}, 401
-    
+
     except BadRequest:
         return {"Error": "Syntax error!"}, 400
-    
+
     except KeyError:
         return {"Error": "Login needs email and password keys."}, 400
 
