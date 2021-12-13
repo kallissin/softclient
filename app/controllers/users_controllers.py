@@ -6,13 +6,16 @@ from http import HTTPStatus
 from werkzeug.exceptions import NotFound
 from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, jwt_required
+from utils.permission import only_role
 
 
 def format_datetime(date):
     return date.strftime('%d/%m/%Y')
 
 
+@only_role('admin')
+@jwt_required()
 def create_user():
     try:
         data = request.get_json()
@@ -41,6 +44,7 @@ def create_user():
         return jsonify({"message": str(err)}), HTTPStatus.BAD_REQUEST
 
 
+@jwt_required()
 def get_all_users():
     users = UserModel.query.all()
 
@@ -62,6 +66,7 @@ def get_all_users():
     }for user in users]), HTTPStatus.OK
 
 
+@jwt_required()
 def get_user_by_id(user_id):
     try:
         user = UserModel.query.filter_by(id=user_id).first_or_404()
@@ -82,6 +87,7 @@ def get_user_by_id(user_id):
         return {"message": "user not found"}, HTTPStatus.NOT_FOUND
 
 
+@jwt_required()
 def get_user_by_name(user_name):
     try:
         user = UserModel.query.filter_by(name=user_name.title()).first_or_404()
@@ -102,6 +108,7 @@ def get_user_by_name(user_name):
         return {"message": "user not found"}, HTTPStatus.NOT_FOUND
 
 
+@jwt_required()
 def update_user(user_id):
     data = request.get_json()
     try:
@@ -125,6 +132,8 @@ def update_user(user_id):
         return {"message": "user not found"}, HTTPStatus.NOT_FOUND
 
 
+@only_role('admin')
+@jwt_required()
 def delete_user(user_id):
     try:
         user = UserModel.query.filter_by(id=user_id).first_or_404()
@@ -135,6 +144,7 @@ def delete_user(user_id):
         return {"message": "user not found"}, HTTPStatus.NOT_FOUND
 
 
+@jwt_required()
 def get_company_by_user_id(user_id):
     try:
         user = UserModel.query.filter_by(id=user_id).first_or_404()
@@ -150,6 +160,7 @@ def get_company_by_user_id(user_id):
         return {"message": "user not found"}, HTTPStatus.NOT_FOUN
 
 
+@jwt_required()
 def get_orders_by_user_id(user_id):
     try:
         orders_list = OrderModel.query.filter_by(id=user_id).all()
