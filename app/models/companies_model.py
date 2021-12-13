@@ -1,6 +1,7 @@
 from app.configs.database import db
-from sqlalchemy import Column, String, Integer
+from sqlalchemy import Column, String, Integer, Boolean
 from dataclasses import dataclass
+from werkzeug.security import generate_password_hash, check_password_hash
 
 @dataclass
 class CompanyModel(db.Model):
@@ -10,7 +11,6 @@ class CompanyModel(db.Model):
     trading_name: str
     company_name: str
     username: str
-    password: str
     role: str
 
     __tablename__ = 'companies'
@@ -20,5 +20,18 @@ class CompanyModel(db.Model):
     trading_name = Column(String, nullable=False, unique=True)
     company_name = Column(String, nullable=False, unique=True)
     username = Column(String(150), nullable=True)
-    password = Column(String, nullable=True)
+    password_hash = Column(String, nullable=True)
     role = Column(String(150), nullable=True)
+    active = Column(Boolean, nullable=False)
+
+
+    @property
+    def password(self):
+        raise AttributeError('Password is not acessible.')
+
+    @password.setter
+    def password(self, password_to_hash):
+        self.password_hash = generate_password_hash(password_to_hash)
+
+    def check_password(self, password_to_compare):
+        return check_password_hash(self.password_hash, password_to_compare)
