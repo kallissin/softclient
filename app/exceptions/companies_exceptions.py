@@ -37,4 +37,12 @@ class CompanyNameExistsError(Exception):
 
         self.message = {
             "error": "The provided Company Name already exists."
-        }, 400                
+        }, 400      
+        
+class FailedToLoginError(Exception):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.message = {
+            "error": "Username or password does not exist."
+        }, 404                       
