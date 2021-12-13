@@ -1,12 +1,13 @@
 from flask import request, current_app, jsonify
-from app.exceptions.companies_exceptions import CNPJExistsError, CNPJFormatError, CompanyNameExistsError, InvalidIDError, TradingNameExistsError
+from app.exceptions.companies_exceptions import CNPJExistsError, FailedToLoginError, CNPJFormatError, CompanyNameExistsError, InvalidIDError, TradingNameExistsError
 from app.utils.cnpj_validator import is_cnpj_valid, cnpj_formatter
 from app.models.companies_model import CompanyModel
 from app.models.user_model import UserModel
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import create_access_token, jwt_required
 
 
 # RETURNS ALL COMPANIES
+@jwt_required()
 def get_all():
     company = CompanyModel.query.all()
     new_list = []
@@ -27,6 +28,7 @@ def get_all():
 
 
 # RETURNS A SINGLE COMPANY BY ID
+@jwt_required()
 def get_one(company_id: int):
     company = CompanyModel.query.filter_by(id = company_id).first()
     users = UserModel.query.filter_by(company_id = company.id).all()
@@ -44,7 +46,8 @@ def get_one(company_id: int):
     
 
 
-# GETS ALL USERS OF A GIVEN COMPANY         
+# GETS ALL USERS OF A GIVEN COMPANY
+@jwt_required()         
 def get_company_users(company_id: int):
     company = CompanyModel.query.filter_by(id = company_id).first()
     
@@ -57,7 +60,8 @@ def get_company_users(company_id: int):
 
 
 
-# DELETES A SINGLE COMPANY BY ID       
+# DELETES A SINGLE COMPANY BY ID   
+@jwt_required()    
 def delete_company(company_id: int):
     try:
         query = CompanyModel.query.get(company_id)
@@ -173,9 +177,10 @@ def create_company():
             "cnpj": data['cnpj'],
             "trading_name": data['trading_name'].title(),
             "company_name": data['company_name'].title(),
-            "username": None,
-            "password": None,
-            "role": None
+            "username": data['username'],
+            "password": data['password'],
+            "role": 'admin',
+            "active": False
         }
         
         new_company = CompanyModel(**data)
@@ -198,3 +203,19 @@ def create_company():
         "trading_name": new_company.trading_name,
         "company_name": new_company.company_name,
     }), 201
+    
+    
+def login():
+    data = request.get_json()
+    password = data.pop('password')
+    try:
+        company: CompanyModel = CompanyModel.query.filter_by(username=data['username']).first()
+        
+        if not company:
+            raise FailedToLoginError
+
+        if company.check_password(password):
+            return jsonify({"token": create_access_token(company)})
+        
+    except FailedToLoginError as err:
+        return err.message  
