@@ -1,12 +1,16 @@
 from app.configs.database import db
 from sqlalchemy.orm import relationship, validates
-from sqlalchemy import Column, String, Date, Integer, Boolean, ForeignKey
+from sqlalchemy import Column, String, Date, Integer, Boolean, ForeignKey, Enum
 from dataclasses import dataclass
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+import enum
+from app.exceptions.users_exceptions import InvalidBirthDateError, InvalidRoleError, KeyTypeError
 
-from app.exceptions.users_exceptions import InvalidBirthDateError, KeyTypeError
 
+class EnumRole(enum.Enum):
+    admin = 'admin'
+    user = 'user'
 
 @dataclass
 class UserModel(db.Model):
@@ -23,9 +27,10 @@ class UserModel(db.Model):
     name = Column(String(150), nullable=False)
     email = Column(String, unique=True, nullable=False)
     password_hash = Column(String, nullable=False)
+    position = Column(String(100), nullable=False)
     birthdate = Column(Date)
     active = Column(Boolean, nullable=False)
-    role = Column(String(150), nullable=False)
+    role = Column(Enum(EnumRole), nullable=False)
     company_id = Column(Integer, ForeignKey('companies.id'), nullable=False)
 
     company = relationship("CompanyModel", backref="user", uselist=False)
@@ -52,6 +57,13 @@ class UserModel(db.Model):
         
         return birthdate
     
+    @validates('role')
+    def validate_role(self, key, role):
+        if role not in ['admin', 'user']:
+            raise InvalidRoleError("role permission 'admin' or 'user'")
+    
+        return role
+
     @staticmethod
     def validate_keys(data: dict):
         list_keys = ["name", "email", "password", "active", "role", "company_id"]

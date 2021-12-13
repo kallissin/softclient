@@ -1,25 +1,29 @@
 from flask import request, jsonify, current_app
-from app.exceptions.users_exceptions import InvalidBirthDateError, KeyTypeError
+from app.exceptions.users_exceptions import InvalidBirthDateError, InvalidRoleError, KeyTypeError
 from app.models.user_model import UserModel
 from app.models.order_model import OrderModel
 from http import HTTPStatus
 from werkzeug.exceptions import NotFound
 from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
-from flask_jwt_extended import create_access_token, jwt_required
-from app.utils.permission import only_role
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from app.utils.permission import permission_role
 
 
 def format_datetime(date):
     return date.strftime('%d/%m/%Y')
 
 
-@only_role('admin')
+@permission_role('admin')
 @jwt_required()
 def create_user():
+    company = get_jwt_identity()
+
     try:
         data = request.get_json()
         data['active'] = True
+        data['company_id'] = company['id']
+
         UserModel.validate_keys(data)
         new_data = UserModel.format_data(data)
         user = UserModel(**new_data)
@@ -31,16 +35,21 @@ def create_user():
             "id": user.id,
             "name": user.name,
             "email": user.email,
+            "position": user.position,
             "birthdate": format_datetime(user.birthdate),
             "active": user.active,
-            "role": user.role,
+            "role": user.role.value,
             "company_name": user.company.company_name
         }), HTTPStatus.CREATED
+    except NotFound:
+        return jsonify({"message": "Company not found"}), HTTPStatus.NOT_FOUND
+    except InvalidRoleError as err:
+        return jsonify({"message": str(err)}), HTTPStatus.BAD_REQUEST
     except KeyTypeError as err:
         return jsonify(err.message), err.code
     except IntegrityError as err:
         if isinstance(err.orig, UniqueViolation):
-            return jsonify({"message": str(err.orig).split('\n')[1]}), HTTPStatus.CONFLICT
+            return jsonify({"message": "Email already exists"}), HTTPStatus.CONFLICT
     except InvalidBirthDateError as err:
         return jsonify({"message": str(err)}), HTTPStatus.BAD_REQUEST
 
@@ -56,9 +65,10 @@ def get_all_users():
         "id": user.id,
         "name": user.name,
         "email": user.email,
+        "position": user.position,
         "active": user.active,
         "birthdate": user.birthdate,
-        "role": user.role,
+        "role": user.role.value,
         "company": {
             "id": user.company.id,
             "trading_name": user.company.trading_name,
@@ -75,9 +85,10 @@ def get_user_by_id(user_id):
             "id": user.id,
             "name": user.name,
             "email": user.email,
+            "position": user.position,
             "active": user.active,
             "birthdate": format_datetime(user.birthdate),
-            "role": user.role,
+            "role": user.role.value,
             "company": {
             "id": user.company.id,
             "trading_name": user.company.trading_name,
@@ -96,9 +107,10 @@ def get_user_by_name(user_name):
             "id": user.id,
             "name": user.name,
             "email": user.email,
+            "position": user.position,
             "active": user.active,
             "birthdate": format_datetime(user.birthdate),
-            "role": user.role,
+            "role": user.role.value,
             "company": {
             "id": user.company.id,
             "trading_name": user.company.trading_name,
@@ -109,12 +121,19 @@ def get_user_by_name(user_name):
         return {"message": "user not found"}, HTTPStatus.NOT_FOUND
 
 
+@permission_role(('admin', 'user'))
 @jwt_required()
 def update_user(user_id):
+    logged = get_jwt_identity()
     data = request.get_json()
     try:
         user = UserModel.query.filter_by(id=user_id).first_or_404()
         for key, value in data.items():
+            if key in ['active', 'role']:
+                if logged['role'] == 'admin':
+                    setattr(user, key, value)
+                else:
+                    return jsonify({"message": "Unauthorized to update role"}), HTTPStatus.UNAUTHORIZED
             setattr(user, key, value)
         
         current_app.db.session.add(user)
@@ -124,23 +143,14 @@ def update_user(user_id):
             "id": user.id,
             "name": user.name,
             "email": user.email,
+            "position": user.position,
             "active": user.active,
             "birthdate": format_datetime(user.birthdate),
-            "role": user.role,
+            "role": user.role.value,
             "company_name": user.company.company_name
         }), HTTPStatus.OK
-    except NotFound:
-        return {"message": "user not found"}, HTTPStatus.NOT_FOUND
-
-
-@only_role('admin')
-@jwt_required()
-def delete_user(user_id):
-    try:
-        user = UserModel.query.filter_by(id=user_id).first_or_404()
-        current_app.db.session.delete(user)
-        current_app.db.session.commit()
-        return jsonify(user), HTTPStatus.OK
+    except InvalidRoleError as err:
+        return jsonify({"message": str(err)}), HTTPStatus.BAD_REQUEST
     except NotFound:
         return {"message": "user not found"}, HTTPStatus.NOT_FOUND
 
@@ -186,6 +196,13 @@ def login():
         user: UserModel = UserModel.query.filter_by(email=data['email']).first_or_404()
 
         if user.check_password(password):
-            return jsonify({"token": create_access_token(user)})
+            return jsonify({"token": create_access_token({"id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "position": user.position,
+            "active": user.active,
+            "birthdate": format_datetime(user.birthdate),
+            "role": user.role.value,
+            "company_name": user.company.company_name})})
     except NotFound:
         return {"message": "user not found"}, HTTPStatus.NOT_FOUND

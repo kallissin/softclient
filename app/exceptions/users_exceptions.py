@@ -12,3 +12,6 @@ class KeyTypeError(Exception):
         self.code = 400
 
         super().__init__(self.message, self.code)
+
+class InvalidRoleError(Exception):
+    ...
