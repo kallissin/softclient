@@ -1,6 +1,6 @@
 from app.configs.database import db
 from sqlalchemy.orm import relationship, validates
-from sqlalchemy import Column, String, Date, Integer, ForeignKey
+from sqlalchemy import Column, String, Date, Integer, Boolean, ForeignKey
 from dataclasses import dataclass
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
@@ -14,7 +14,7 @@ class UserModel(db.Model):
     name: str
     email: str
     birthdate: str
-    registration: int
+    active: bool
     role: str
 
     __tablename__ = 'users'
@@ -24,7 +24,7 @@ class UserModel(db.Model):
     email = Column(String, unique=True, nullable=False)
     password_hash = Column(String, nullable=False)
     birthdate = Column(Date)
-    registration = Column(Integer, unique=True, nullable=False)
+    active = Column(Boolean, nullable=False)
     role = Column(String(150), nullable=False)
     company_id = Column(Integer, ForeignKey('companies.id'), nullable=False)
 
@@ -54,7 +54,7 @@ class UserModel(db.Model):
     
     @staticmethod
     def validate_keys(data: dict):
-        list_keys = ["name", "email", "password", "registration", "role", "company_id"]
+        list_keys = ["name", "email", "password", "active", "role", "company_id"]
         for key in list_keys:
             if not key in list(data.keys()):
                 raise KeyTypeError(data)
