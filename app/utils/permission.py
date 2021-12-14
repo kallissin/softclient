@@ -9,8 +9,11 @@ def permission_role(roles):
         def decorator(*args, **kwargs):
             verify_jwt_in_request()
             claims = get_jwt()
+            print(claims)
             if claims['sub']['role'] in roles:
-                return fn(*args, **kwargs)
+                if claims['sub']['active'] == True:
+                    return fn(*args, **kwargs)
+                return jsonify(msg="Account is not active"), 403
             else:
                 return jsonify(msg="Unauthorized for this user scope"), 403
         return decorator
