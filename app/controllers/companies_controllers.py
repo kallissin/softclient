@@ -7,6 +7,8 @@ from flask_jwt_extended import create_access_token, jwt_required
 
 from app.utils.permission import permission_role
 
+def format_datetime(date):
+    return date.strftime('%d/%m/%Y')
 
 # RETURNS ALL COMPANIES
 @jwt_required()
@@ -16,12 +18,24 @@ def get_all():
     
     for item in company:
         users = UserModel.query.filter_by(company_id = item.id).all()
+        
+        new = []
+        for user in users:
+            parsed_user = {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "position": user.position,
+                "birthdate": format_datetime(user.birthdate)
+            }
+            new.append(parsed_user)
+        
         formatted_item = {
         "id": item.id,
         "cnpj": cnpj_formatter(item.cnpj),
         "trading_name": item.trading_name,
         "company_name": item.company_name,
-        "users": list(users)
+        "users": new
         }
         new_list.append(formatted_item)   
     
@@ -35,6 +49,17 @@ def get_one(company_id: int):
     company = CompanyModel.query.filter_by(id = company_id).first()
     users = UserModel.query.filter_by(company_id = company.id).all()
 
+    new = []
+    for item in users:
+        parsed_user = {
+            "id": item.id,
+            "name": item.name,
+            "email": item.email,
+            "position": item.position,
+            "birthdate": format_datetime(item.birthdate)
+        }
+        new.append(parsed_user)
+
     if not company:
         return { "error": "Company not found."}, 404
     
@@ -43,7 +68,7 @@ def get_one(company_id: int):
         "cnpj": cnpj_formatter(company.cnpj),
         "trading_name": company.trading_name,
         "company_name": company.company_name,
-        "users": list(users)
+        "users": new
     }), 200
     
 
@@ -57,8 +82,18 @@ def get_company_users(company_id: int):
         return { "error": "Company not found."}, 404
     
     users = UserModel.query.filter_by(company_id = company.id).all()
+    new = []
+    for item in users:
+        parsed_user = {
+            "id": item.id,
+            "name": item.name,
+            "email": item.email,
+            "position": item.position,
+            "birthdate": format_datetime(item.birthdate)
+        }
+        new.append(parsed_user)
     
-    return jsonify(users), 200
+    return jsonify(new), 200
 
 
 
