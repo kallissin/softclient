@@ -250,40 +250,45 @@ def finalize_order(order_id):
 
         order = OrderModel.query.get_or_404(order_id)
 
-        token_id = get_jwt_identity()["id"]
+        if order.status.value != "fechado":
 
-        if token_id == order.technician_id:
+            token_id = get_jwt_identity()["id"]
 
-            setattr(order, "status", "fechado")
-            setattr(order, "update_date", datetime.utcnow())
-            setattr(order, "solution", solution)
+            if token_id == order.technician_id:
 
-            current_app.db.session.add(order)
-            current_app.db.session.commit()
+                setattr(order, "status", "fechado")
+                setattr(order, "update_date", datetime.utcnow())
+                setattr(order, "solution", solution)
 
-            return jsonify(
-                {
-                    "order": {
-                        "id": order.id,
-                        "status": order.status.value,
-                        "type": order.type.value,
-                        "description": order.description,
-                        "release_date": order.release_date,
-                        "update_date": order.update_date,
-                        "solution": order.solution,
-                        "user": {
-                            "id": order.user.id,
-                            "name": order.user.name,
-                            "email": order.user.email,
-                            "position": order.user.position,
-                            "birthdate": format_datetime(order.user.birthdate)
+                current_app.db.session.add(order)
+                current_app.db.session.commit()
+
+                return jsonify(
+                    {
+                        "order": {
+                            "id": order.id,
+                            "status": order.status.value,
+                            "type": order.type.value,
+                            "description": order.description,
+                            "release_date": order.release_date,
+                            "update_date": order.update_date,
+                            "solution": order.solution,
+                            "user": {
+                                "id": order.user.id,
+                                "name": order.user.name,
+                                "email": order.user.email,
+                                "position": order.user.position,
+                                "birthdate": format_datetime(order.user.birthdate)
+                            }
                         }
                     }
-                }
-            ), 200
+                ), 200
 
+            else:
+                raise Unauthorized
+        
         else:
-            raise Unauthorized
+            return {"message": "this order has already been completed"}, 400
 
     except Unauthorized:
         return {"Error": "Technician not allowed to complete the order"}, 401
@@ -321,6 +326,9 @@ def delete_technician(id: int):
 
     except NotFound:
         return {"Error": "Technician not found."}, 404
+
+
+
 
 
 def login():
