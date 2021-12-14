@@ -1,8 +1,6 @@
-from datetime import date, datetime
+from datetime import datetime
 from flask import request, jsonify, current_app
-from sqlalchemy.sql.elements import Null
-from sqlalchemy.sql.sqltypes import DATE, DateTime
-from app.exceptions.technicians_exceptions import InvalidKeyError
+from app.exceptions.technicians_exceptions import InvalidKeyError, OrderAlreadyTakenError
 from app.models.technician_model import TechnicianModel
 import sqlalchemy
 import psycopg2
@@ -11,7 +9,7 @@ from app.utils.cnpj_validator import cnpj_formatter
 from app.utils.format_date import format_datetime
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from werkzeug.exceptions import Unauthorized
-
+from app.models.order_model import OrderModel
 
 
 def create_technician():
@@ -64,19 +62,15 @@ def create_technician():
     except sqlalchemy.exc.DataError as e:
         if type(e.orig) == psycopg2.errors.InvalidDatetimeFormat:
             return {"Error": "Formato de data inválida. Use: (%d/%m/%Y)"}
-    
-
 
 
 def get_technicians():
-    technicians = TechnicianModel.query.order_by(TechnicianModel.id.desc()).all()
+    technicians = TechnicianModel.query.order_by(
+        TechnicianModel.id.desc()).all()
     for technician in technicians:
         if technician.birthdate != None:
             technician.birthdate = format_datetime(technician.birthdate)
     return jsonify(technicians), 200
-    
-
-
 
 
 def get_technician_by_id(id: int):
@@ -90,8 +84,6 @@ def get_technician_by_id(id: int):
 
     except NotFound:
         return {"Error": "Technician not found."}, 404
-
-
 
 
 def get_orders_by_technician(id: int):
@@ -110,8 +102,7 @@ def get_orders_by_technician(id: int):
                 "id": order.user.id,
                 "name": order.user.name,
                 "email": order.user.email,
-                "registration": order.user.registration,
-                "role": order.user.role,
+                "position": order.user.position,
                 "company": {
                     "id": order.user.company.id,
                     "cnpj": cnpj_formatter(order.user.company.cnpj),
@@ -122,8 +113,6 @@ def get_orders_by_technician(id: int):
 
     except NotFound:
         return {"Error": "Technician not found."}, 404
-
-
 
 
 @jwt_required()
@@ -197,6 +186,126 @@ def update_technician(id: int):
 
 
 
+@jwt_required()
+def take_order(order_id):
+
+    token_id = get_jwt_identity()["id"]
+
+    try:
+        order = OrderModel.query.get_or_404(order_id)
+        
+        if order.status.value == "aberto":
+
+            setattr(order, "technician_id", token_id)
+            setattr(order, "status", "em_atendimento")
+            setattr(order, "update_date", datetime.utcnow())
+
+            current_app.db.session.add(order)
+            current_app.db.session.commit()
+
+            return jsonify(
+                {
+                    "order": {
+                        "id": order.id,
+                        "status": order.status.value,
+                        "type": order.type.value,
+                        "description": order.description,
+                        "release_date": order.release_date,
+                        "update_date": order.update_date,
+                        "user": {
+                            "id": order.user.id,
+                            "name": order.user.name,
+                            "email": order.user.email,
+                            "position": order.user.position,
+                            "birthdate": format_datetime(order.user.birthdate)
+                        }
+                    }
+                }
+            ), 200
+
+        else:
+            raise OrderAlreadyTakenError           
+    
+    except NotFound:
+        return {"Error": "Order not found"}, 404
+
+    except OrderAlreadyTakenError: 
+        return {"Error": "the order has already been taken"}, 400 
+
+
+
+
+
+@jwt_required()
+def finalize_order(order_id):  
+    try:  
+        solution = request.get_json()["solution"]
+
+        for key in request.get_json().keys():
+            if key != "solution":
+                raise KeyError
+
+        if type(solution) != str:
+            raise ValueError
+
+        order = OrderModel.query.get_or_404(order_id)
+
+        token_id = get_jwt_identity()["id"]
+
+        if token_id == order.technician_id:
+
+            setattr(order, "status", "fechado")
+            setattr(order, "update_date", datetime.utcnow())
+            setattr(order, "solution", solution)
+
+            current_app.db.session.add(order)
+            current_app.db.session.commit()
+
+            return jsonify(
+                {
+                    "order": {
+                        "id": order.id,
+                        "status": order.status.value,
+                        "type": order.type.value,
+                        "description": order.description,
+                        "release_date": order.release_date,
+                        "update_date": order.update_date,
+                        "solution": order.solution,
+                        "user": {
+                            "id": order.user.id,
+                            "name": order.user.name,
+                            "email": order.user.email,
+                            "position": order.user.position,
+                            "birthdate": format_datetime(order.user.birthdate)
+                        }
+                    }
+                }
+            ), 200
+
+        else:
+            raise Unauthorized
+
+    except Unauthorized:
+        return {"Error": "Technician not allowed to complete the order"}, 401
+
+    except KeyError:
+        return {"Error": "only the use of the solution key is allowed"}, 400
+
+    except BadRequest:
+        return {"Error": "Sintax error"}, 400
+
+    except TypeError:
+        return {"Error": "You must pass the solution key in the request body"}, 400
+
+    except ValueError:
+        return {"Error": "Only string type values ​​are accepted"}, 400
+
+    except NotFound:
+        return {"Error": "Order not found"}, 404
+
+
+
+
 
 def delete_technician(id: int):
     try:
@@ -209,19 +318,17 @@ def delete_technician(id: int):
             technician.birthdate = format_datetime(technician.birthdate)
 
         return jsonify(technician), 200
-    
+
     except NotFound:
         return {"Error": "Technician not found."}, 404
-
-
-
 
 
 def login():
     try:
         data = request.get_json()
 
-        technician = TechnicianModel.query.filter_by(email=data['email']).first()
+        technician = TechnicianModel.query.filter_by(
+            email=data['email']).first()
 
         if technician.check_password(data['password']):
             token = create_access_token(technician)
@@ -237,7 +344,3 @@ def login():
 
     except KeyError:
         return {"Error": "Login needs email and password keys."}, 400
-
-
-
-

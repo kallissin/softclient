@@ -18,6 +18,7 @@ def list_orders():
         "update_date": format_datetime(order.update_date),
         "solution": order.solution,
         "user_id": order.user_id,
+        "technician_id": order.technician_id
     } for order in orders_list]), 200
 
 
