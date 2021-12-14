@@ -22,7 +22,7 @@ class EnumType(enum.Enum):
 @dataclass
 class OrderModel(db.Model):
       
-    keys_list = ["type", "description", "user_id"]
+    keys_list = ["type", "description"]
     
     id: int
     status: str
@@ -60,6 +60,7 @@ class OrderModel(db.Model):
         for key in cls.keys_list:
             if key not in data.keys():
                 raise KeyTypeError(data)
+            
 
     @classmethod
     def check_needed_keys(cls, data: dict):

@@ -7,7 +7,6 @@ from app.utils.format_date import format_date_and_time
 from app.exceptions.orders_exceptions import KeyTypeError, InvalidDate
 import sqlalchemy
 
-
 def list_orders():
     orders_list = OrderModel.query.all()
     return jsonify([{
@@ -34,6 +33,7 @@ def create_order():
         current_app.db.session.commit()
 
         return jsonify({
+        "id": order.id,
         "type": order.type.value,
         "status": order.status.value,
         "description": order.description,
@@ -55,6 +55,7 @@ def get_order_by_id(id: int):
     try:
         order = OrderModel.query.get_or_404(id)
         return jsonify({
+            "id": order.id,
             "type": order.type.value,
             "status": order.status.value,
             "description": order.description,
@@ -64,16 +65,44 @@ def get_order_by_id(id: int):
             "user_id": order.user.id,
             "technician_id": order.technician_id,
                 }), HTTPStatus.OK
-    except:
+    except NotFound:
         return {"Error": "Order not found."}, HTTPStatus.NOT_FOUND
     
-# def update_order(order_id: int):
-#     data = request.get_json()
-#     current_app.db.session.add(order)
-#     current_app.db.session.commit()
-     
-#     return "", 202
+def update_order(id: int):
+    try:
+        data = request.get_json()
+        order = OrderModel.query.filter_by(id=id).first()
+        if not order:
+            return jsonify({"msg": "order not found!"}), 404
+        keys = ["type", "description"]
+        print(data.items())
+        for key, value in data.items():
+        
+                if key in keys:
 
+                    setattr(order, key, value)
+                else:
+                    return jsonify({"msg": f"{key} field is wrong"}), 400
+                    
+        current_app.db.session.add(order)
+        current_app.db.session.commit()
+    except sqlalchemy.exc.DataError:
+        return jsonify({"msg": "type value is wrong"}), 400
+    
+        
+    
+
+    return jsonify({
+        "id": order.id,
+        "type": order.type.value,
+        "status": order.status.value,
+        "description": order.description,
+        "release_date": order.release_date,
+        "update_date": order.update_date,
+        "solution": order.solution,
+        "user_id": order.user.id,
+        "technician_id": order.technician_id,
+        }), 200
 
 def get_order_by_status(order_status: str):
     try:
@@ -81,6 +110,7 @@ def get_order_by_status(order_status: str):
        
         
         return jsonify([{
+        "id": order.id,
         "type": order.type.value,
         "status": order.status.value,
         "description": order.description,
@@ -90,14 +120,14 @@ def get_order_by_status(order_status: str):
         "user_id": order.user_id,
         "technician_id": order.technician_id
             } for order in orders]), HTTPStatus.OK
-    except:
+    except NotFound:
         return {"Error": "Not found."}, HTTPStatus.NOT_FOUND
     
 def delete_order(id: int):
-        order = OrderModel.query.get_or_404(id)
-        current_app.db.session.delete(order)
-        current_app.db.session.commit()
-        return jsonify(order), HTTPStatus.OK
+    order = OrderModel.query.get_or_404(id)
+    current_app.db.session.delete(order)
+    current_app.db.session.commit()
+    return "", HTTPStatus.OK
     
 
 def get_user_by_order_id(order_id):
