@@ -209,7 +209,7 @@ def create_company():
     }), 201
     
 
-@permission_role(('admin'))    
+# @permission_role(('admin'))    
 def login():
     data = request.get_json()
     password = data.pop('password')
