@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from app.models.user_model import UserModel
 import enum
 from datetime import datetime
+from app.exceptions.orders_exceptions import KeyTypeError
 
 
 class EnumStatus(enum.Enum):
@@ -20,6 +21,8 @@ class EnumType(enum.Enum):
 
 @dataclass
 class OrderModel(db.Model):
+      
+    keys_list = ["type", "description", "user_id", "technician_id"]
     
     id: int
     status: str
@@ -52,6 +55,18 @@ class OrderModel(db.Model):
     user = relationship("UserModel", backref="orders", uselist=False)
     technician = relationship("TechnicianModel", backref="orders", uselist=False)
     
+    @classmethod
+    def validate(cls, data: dict):
+        for key in cls.keys_list:
+            if key not in data.keys():
+                raise KeyTypeError(data)
+
+    @classmethod
+    def check_needed_keys(cls, data: dict):
+        new_dict = {key:value for key, value in data.items() if key in cls.keys_list}
+        return new_dict
+
+
     
     @staticmethod
     def create_order_data(data: dict):
