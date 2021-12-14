@@ -1,4 +1,3 @@
-# users_blueprints
 from flask import Blueprint
 
 from app.controllers.users_controllers import create_user, get_all_users, get_company_by_user_id, get_orders_by_user_id, get_user_by_id, get_user_by_name, login, update_user

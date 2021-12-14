@@ -1,6 +1,6 @@
 from os import path
 from flask import Blueprint
-from app.controllers.technicians_controllers import create_technician, delete_technician, finalize_order, \
+from app.controllers.technicians_controllers import create_technician, finalize_order, \
         get_orders_by_technician, get_technician_by_id, get_technicians, login, take_order, update_technician
 
 
@@ -14,4 +14,3 @@ bp_technicians.get("/<int:id>/orders")(get_orders_by_technician)
 bp_technicians.patch("/<int:id>")(update_technician)
 bp_technicians.patch("/take_order/<int:order_id>")(take_order)
 bp_technicians.patch("/finalize_order/<int:order_id>")(finalize_order)
-bp_technicians.delete("/<int:id>")(delete_technician)

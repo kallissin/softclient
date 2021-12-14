@@ -243,7 +243,9 @@ def create_company():
         "company_name": new_company.company_name,
     }), 201
     
-   
+
+
+
 def login():
     data = request.get_json()
     password = data.pop('password')
