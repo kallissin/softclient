@@ -4,6 +4,7 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 from werkzeug.exceptions import NotFound
 from http import HTTPStatus
 
+
 def create_owner():
     data = request.get_json()
 
@@ -15,7 +16,7 @@ def create_owner():
     return jsonify(owner)
 
 
-
+@jwt_required()
 def get_all_owner():
     list_owner = OwnerModel.query.all()
     return jsonify(list_owner)

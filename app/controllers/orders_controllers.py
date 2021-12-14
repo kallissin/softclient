@@ -4,9 +4,13 @@ from app.models.order_model import OrderModel
 from http import HTTPStatus
 from werkzeug.exceptions import NotFound
 from app.utils.format_date import format_date_and_time
+from app.utils.permission import permission_role
 from app.exceptions.orders_exceptions import KeyTypeError, InvalidDate
 import sqlalchemy
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 
+
+@jwt_required()
 def list_orders():
     orders_list = OrderModel.query.all()
     return jsonify([{
@@ -22,9 +26,14 @@ def list_orders():
     } for order in orders_list]), HTTPStatus.OK
 
 
+@permission_role(('user',))
+@jwt_required()
 def create_order():
+    user = get_jwt_identity()
+
     try:
         data = request.json
+        data['user_id'] = user['id']
         OrderModel.validate(data)
         verified_data = OrderModel.check_needed_keys(data)
         new_data = OrderModel.create_order_data(verified_data)
@@ -51,6 +60,7 @@ def create_order():
         return {"error":"Wrong field value"}
 
 
+@jwt_required()
 def get_order_by_id(id: int):
     try:
         order = OrderModel.query.get_or_404(id)
@@ -68,6 +78,9 @@ def get_order_by_id(id: int):
     except NotFound:
         return {"Error": "Order not found."}, HTTPStatus.NOT_FOUND
     
+
+@permission_role(('user', 'tech'))
+@jwt_required()    
 def update_order(id: int):
     try:
         data = request.get_json()
@@ -75,7 +88,7 @@ def update_order(id: int):
         if not order:
             return jsonify({"msg": "order not found!"}), 404
         keys = ["type", "description"]
-        print(data.items())
+        #print(data.items())
         for key, value in data.items():
         
                 if key in keys:
@@ -104,6 +117,8 @@ def update_order(id: int):
         "technician_id": order.technician_id,
         }), 200
 
+
+@jwt_required()
 def get_order_by_status(order_status: str):
     try:
         orders= OrderModel.query.filter_by(status=order_status).all()
@@ -122,7 +137,10 @@ def get_order_by_status(order_status: str):
             } for order in orders]), HTTPStatus.OK
     except NotFound:
         return {"Error": "Not found."}, HTTPStatus.NOT_FOUND
-    
+
+
+@permission_role(('user',))
+@jwt_required()    
 def delete_order(id: int):
     order = OrderModel.query.get_or_404(id)
     current_app.db.session.delete(order)
@@ -130,6 +148,7 @@ def delete_order(id: int):
     return "", HTTPStatus.OK
     
 
+@jwt_required()
 def get_user_by_order_id(order_id):
     try:
         order = OrderModel.query.filter_by(id=order_id).first_or_404()
@@ -148,6 +167,7 @@ def get_user_by_order_id(order_id):
         return {"message": "Order not found!"}, HTTPStatus.NOT_FOUND
 
 
+@jwt_required()
 def get_technician_by_order_id(order_id):
     try:
         order = OrderModel.query.filter_by(id=order_id).first_or_404()
