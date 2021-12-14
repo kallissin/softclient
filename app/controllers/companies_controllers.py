@@ -5,6 +5,8 @@ from app.models.companies_model import CompanyModel
 from app.models.user_model import UserModel
 from flask_jwt_extended import create_access_token, jwt_required
 
+from app.utils.permission import permission_role
+
 
 # RETURNS ALL COMPANIES
 @jwt_required()
@@ -80,6 +82,7 @@ def delete_company(company_id: int):
 
 
 # UPDATES COMPANY
+@permission_role('admin')
 @jwt_required()
 def update_company(company_id: int):
     session = current_app.db.session
@@ -199,12 +202,14 @@ def create_company():
     
     return jsonify({
         "id": new_company.id,
+        "active": new_company.active,
         "cnpj": cnpj_formatter(new_company.cnpj),
         "trading_name": new_company.trading_name,
         "company_name": new_company.company_name,
     }), 201
     
-    
+
+@permission_role(('admin'))    
 def login():
     data = request.get_json()
     password = data.pop('password')
