@@ -20,8 +20,7 @@ def get_all():
         "id": item.id,
         "cnpj": cnpj_formatter(item.cnpj),
         "trading_name": item.trading_name,
-        "company_name": item.company_name,
-        "users": list(users)
+        "company_name": item.company_name
         }
         new_list.append(formatted_item)   
     
@@ -210,7 +209,7 @@ def create_company():
     
 
 
-@permission_role(('admin'))
+
 def login():
     data = request.get_json()
     password = data.pop('password')

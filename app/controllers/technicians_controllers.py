@@ -10,8 +10,12 @@ from app.utils.format_date import format_datetime
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from werkzeug.exceptions import Unauthorized
 from app.models.order_model import OrderModel
+from app.utils.permission import permission_role
 
 
+
+
+@permission_role(('admin',))
 def create_technician():
     try:
         data = request.get_json()
@@ -64,6 +68,8 @@ def create_technician():
             return {"Error": "Formato de data inválida. Use: (%d/%m/%Y)"}
 
 
+
+@jwt_required()
 def get_technicians():
     technicians = TechnicianModel.query.order_by(
         TechnicianModel.id.desc()).all()
@@ -73,6 +79,8 @@ def get_technicians():
     return jsonify(technicians), 200
 
 
+
+@jwt_required()
 def get_technician_by_id(id: int):
     try:
         technician = TechnicianModel.query.get_or_404(id)
@@ -86,6 +94,9 @@ def get_technician_by_id(id: int):
         return {"Error": "Technician not found."}, 404
 
 
+
+
+@jwt_required()
 def get_orders_by_technician(id: int):
     try:
         technician = TechnicianModel.query.get_or_404(id)
@@ -113,6 +124,8 @@ def get_orders_by_technician(id: int):
 
     except NotFound:
         return {"Error": "Technician not found."}, 404
+
+
 
 
 @jwt_required()
@@ -235,7 +248,6 @@ def take_order(order_id):
 
 
 
-
 @jwt_required()
 def finalize_order(order_id):  
     try:  
@@ -307,25 +319,6 @@ def finalize_order(order_id):
 
     except NotFound:
         return {"Error": "Order not found"}, 404
-
-
-
-
-
-def delete_technician(id: int):
-    try:
-        technician = TechnicianModel.query.get_or_404(id)
-
-        current_app.db.session.delete(technician)
-        current_app.db.session.commit()
-
-        if technician.birthdate != None:
-            technician.birthdate = format_datetime(technician.birthdate)
-
-        return jsonify(technician), 200
-
-    except NotFound:
-        return {"Error": "Technician not found."}, 404
 
 
 
