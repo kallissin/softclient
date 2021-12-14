@@ -14,7 +14,7 @@ def format_datetime(date):
     return date.strftime('%d/%m/%Y')
 
 
-@permission_role('admin')
+@permission_role(('admin',))
 @jwt_required()
 def create_user():
     company = get_jwt_identity()

@@ -4,6 +4,8 @@ from app.models.order_model import OrderModel
 from http import HTTPStatus
 from werkzeug.exceptions import NotFound
 from app.utils.format_date import format_datetime
+from app.exceptions.orders_exceptions import KeyTypeError
+import sqlalchemy
 
 
 def list_orders():
@@ -14,27 +16,34 @@ def list_orders():
         "type": order.type.value,
         "status": order.status.value,
         "description": order.description,
-        "release_date": format_datetime(order.release_date),
-        "update_date": format_datetime(order.update_date),
+        "release_date": order.release_date,
+        "update_date": order.update_date,
         "solution": order.solution,
         "user_id": order.user_id,
         "technician_id": order.technician_id
     } for order in orders_list]), 200
 
 
-
 def create_order():
-    data = request.json
-    new_data = OrderModel.create_order_data(data)
-    order = OrderModel(**new_data)
-    current_app.db.session.add(order)
-    current_app.db.session.commit()
+    try:
+        data = request.json
+        OrderModel.validate(data)
+        verified_data = OrderModel.check_needed_keys(data)
+        new_data = OrderModel.create_order_data(verified_data)
+        order = OrderModel(**new_data)
+        current_app.db.session.add(order)
+        current_app.db.session.commit()
+    except KeyTypeError as e:
+        return jsonify(e.message), e.code
+    except sqlalchemy.exc.StatementError:
+        return {"error":"Wrong field value"}
+
     return jsonify({
         "type": order.type.value,
         "status": order.status.value,
         "description": order.description,
-        "release_date": format_datetime(order.release_date),
-        "update_date": format_datetime(order.update_date),
+        "release_date": order.release_date,
+        "update_date": order.update_date,
         "solution": order.solution,
         "user_id": order.user.id,
         "technician_id": order.technician_id,
@@ -43,16 +52,51 @@ def create_order():
 def get_order_by_id(id: int):
     try:
         order = OrderModel.query.get_or_404(id)
-        return jsonify(order), 200
+        return jsonify({
+            "type": order.type.value,
+            "status": order.status.value,
+            "description": order.description,
+            "release_date": order.release_date,
+            "update_date": order.update_date,
+            "solution": order.solution,
+            "user_id": order.user.id,
+            "technician_id": order.technician_id,
+                }), 200
     except:
         return {"Error": "Order not found."}, 404
     
+# def update_order(order_id: int):
+#     data = request.get_json()
+#     current_app.db.session.add(order)
+#     current_app.db.session.commit()
+     
+#     return "", 202
 
+
+def get_order_by_status(order_status: str):
+    try:
+        orders= OrderModel.query.filter_by(status=order_status).all()
+       
+        
+        return jsonify([{
+        "type": order.type.value,
+        "status": order.status.value,
+        "description": order.description,
+        "release_date": order.release_date,
+        "update_date": order.update_date,
+        "solution": order.solution,
+        "user_id": order.user_id,
+        "technician_id": order.technician_id
+            } for order in orders]), 200
+    except:
+        return {"Error": "Not found."}, 404
+    
 def delete_order(id: int):
-    order = OrderModel.query.get_or_404(id)
-    current_app.db.session.delete(order)
-    current_app.db.session.commit()
-    return jsonify(order), 200
+        order = OrderModel.query.get_or_404(id)
+        current_app.db.session.delete(order)
+        current_app.db.session.commit()
+        return jsonify(order), 200
+    
 
 def get_user_by_order_id(order_id):
     try:

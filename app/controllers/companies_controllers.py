@@ -82,7 +82,7 @@ def delete_company(company_id: int):
 
 
 # UPDATES COMPANY
-@permission_role('admin')
+@permission_role(('admin', 'super'))
 @jwt_required()
 def update_company(company_id: int):
     session = current_app.db.session
@@ -209,7 +209,8 @@ def create_company():
     }), 201
     
 
-# @permission_role(('admin'))    
+
+@permission_role(('admin'))
 def login():
     data = request.get_json()
     password = data.pop('password')
