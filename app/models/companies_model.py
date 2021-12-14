@@ -7,6 +7,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 class CompanyModel(db.Model):
 
     id: int
+    active: bool
     cnpj: str
     trading_name: str
     company_name: str
