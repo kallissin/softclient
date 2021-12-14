@@ -168,7 +168,7 @@ def get_company_by_user_id(user_id):
             }
         }), HTTPStatus.OK
     except NotFound:
-        return {"message": "user not found"}, HTTPStatus.NOT_FOUN
+        return {"message": "user not found"}, HTTPStatus.NOT_FOUND
 
 
 @jwt_required()

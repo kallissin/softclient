@@ -1,3 +1,6 @@
+class InvalidDate(Exception):
+    ...
+
 class KeyTypeError(Exception):
     keys_list = ["type", "description", "user_id"]
 
