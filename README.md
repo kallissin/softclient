@@ -226,8 +226,10 @@ Formato dos campos:
   "name": "Joãozinho Camargo",
   "email": "joaocamargo@gmail.com.br",
   "password": "12345",
+	"position": "Técnico de Informática",
   "birthdate": "22/11/1996",
   "role": "user",
+	"active": true,
   "company_id": 1
 }
 ```
