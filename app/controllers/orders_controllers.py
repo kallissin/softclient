@@ -6,6 +6,7 @@ from werkzeug.exceptions import NotFound
 from app.utils.format_date import format_datetime
 from app.exceptions.orders_exceptions import KeyTypeError
 import sqlalchemy
+from datetime import datetime
 
 
 def list_orders():
@@ -65,12 +66,35 @@ def get_order_by_id(id: int):
     except:
         return {"Error": "Order not found."}, 404
     
-# def update_order(order_id: int):
-#     data = request.get_json()
-#     current_app.db.session.add(order)
-#     current_app.db.session.commit()
-     
-#     return "", 202
+def update_order(order_id: int):
+    data = request.get_json()
+    order = OrderModel.query.get_or_404(id)
+    
+    
+    keys = ["type", "description"]
+        
+    for key, value in data.items():
+
+            if key in keys:
+
+                setattr(order, key, value)
+    
+    current_app.db.session.add(order)
+    current_app.db.session.commit()
+
+    return jsonify({
+        "type": order.type.value,
+        "status": order.status.value,
+        "description": order.description,
+        "release_date": order.release_date,
+        "update_date": order.update_date,
+        "solution": order.solution,
+        "user_id": order.user.id,
+        "technician_id": order.technician_id,
+    }), 200
+    
+ 
+
 
 
 def get_order_by_status(order_status: str):
@@ -92,10 +116,10 @@ def get_order_by_status(order_status: str):
         return {"Error": "Not found."}, 404
     
 def delete_order(id: int):
-        order = OrderModel.query.get_or_404(id)
-        current_app.db.session.delete(order)
-        current_app.db.session.commit()
-        return jsonify(order), 200
+    order = OrderModel.query.get_or_404(id)
+    current_app.db.session.delete(order)
+    current_app.db.session.commit()
+    return "", 204
     
 
 def get_user_by_order_id(order_id):
