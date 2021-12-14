@@ -1,5 +1,5 @@
 class KeyTypeError(Exception):
-    keys_list = ["type", "description", "user_id", "technician_id"]
+    keys_list = ["type", "description", "user_id"]
 
     def __init__(self, data: dict):
         self.message = {

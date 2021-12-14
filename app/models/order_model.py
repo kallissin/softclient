@@ -22,7 +22,7 @@ class EnumType(enum.Enum):
 @dataclass
 class OrderModel(db.Model):
       
-    keys_list = ["type", "description", "user_id", "technician_id"]
+    keys_list = ["type", "description", "user_id"]
     
     id: int
     status: str
