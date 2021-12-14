@@ -1,5 +1,8 @@
+class InvalidDate(Exception):
+    ...
+
 class KeyTypeError(Exception):
-    keys_list = ["type", "description", "user_id"]
+    keys_list = ["type", "description"]
 
     def __init__(self, data: dict):
         self.message = {

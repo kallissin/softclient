@@ -16,7 +16,7 @@ class OwnerModel(db.Model):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(150), nullable=False)
-    username = Column(String(150), nullable=False)
+    username = Column(String(150), unique=True, nullable=False)
     password_hash = Column(String, nullable=False)
     role = Column(String, nullable=False, default='super')
 
