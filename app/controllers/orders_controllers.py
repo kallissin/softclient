@@ -159,7 +159,7 @@ def get_user_by_order_id(order_id):
                 "email": order.user.email,
                 "birthdate": format_date_and_time(order.user.birthdate),
                 "registration": order.user.registration,
-                "role": order.user.role
+                "role": order.user.role.value
             }
             
         }), HTTPStatus.OK
