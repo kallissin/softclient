@@ -49,8 +49,11 @@ def get_all():
 @jwt_required()
 def get_one(company_id: int):
     company = CompanyModel.query.filter_by(id = company_id).first()
-    users = UserModel.query.filter_by(company_id = company.id).all()
 
+    if not company:
+        return { "error": "Company not found."}, 404
+
+    users = UserModel.query.filter_by(company_id = company.id).all()
     new = []
     for item in users:
         parsed_user = {
@@ -62,8 +65,6 @@ def get_one(company_id: int):
         }
         new.append(parsed_user)
 
-    if not company:
-        return { "error": "Company not found."}, 404
     
     return jsonify({
         "id": company.id,
@@ -73,6 +74,37 @@ def get_one(company_id: int):
         "users": new
     }), 200
     
+
+# RETURNS A SINGLE COMPANY BY ID
+@jwt_required()
+def get__by_name(company_name: str):
+    
+    company_name = company_name.title()
+    company = CompanyModel.query.filter_by(trading_name = company_name).first()
+
+    if not company:
+        return { "error": "Company not found."}, 404
+
+    users = UserModel.query.filter_by(company_id = company.id).all()
+    new = []
+    for item in users:
+        parsed_user = {
+            "id": item.id,
+            "name": item.name,
+            "email": item.email,
+            "position": item.position,
+            "birthdate": format_datetime(item.birthdate)
+        }
+        new.append(parsed_user)
+
+    
+    return jsonify({
+        "id": company.id,
+        "cnpj": cnpj_formatter(company.cnpj),
+        "trading_name": company.trading_name,
+        "company_name": company.company_name,
+        "users": new
+    }), 200
 
 
 # GETS ALL USERS OF A GIVEN COMPANY
