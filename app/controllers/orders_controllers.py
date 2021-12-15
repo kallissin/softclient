@@ -3,7 +3,6 @@ from sqlalchemy.sql.functions import user
 from app.models.order_model import OrderModel
 from http import HTTPStatus
 from werkzeug.exceptions import NotFound
-from app.utils.format_date import format_date_and_time
 from app.utils.permission import permission_role
 from app.exceptions.orders_exceptions import KeyTypeError, InvalidDate
 import sqlalchemy
@@ -18,19 +17,21 @@ def list_orders():
         "type": order.type.value,
         "status": order.status.value,
         "description": order.description,
-        "release_date": format_date_and_time(order.release_date),
-        "update_date": format_date_and_time(order.update_date),
+        "release_date": order.release_date,
+        "update_date": order.update_date,
         "solution": order.solution,
         "user_id": order.user_id,
         "technician_id": order.technician_id
     } for order in orders_list]), HTTPStatus.OK
 
 
-@permission_role(('user',))
+@permission_role(('user', 'admin'))
 @jwt_required()
 def create_order():
     user = get_jwt_identity()
 
+    if not user['email']:
+        return jsonify({"message": "only users to place an order"})
     try:
         data = request.json
         data['user_id'] = user['id']
@@ -46,8 +47,8 @@ def create_order():
         "type": order.type.value,
         "status": order.status.value,
         "description": order.description,
-        "release_date": format_date_and_time(order.release_date),
-        "update_date": format_date_and_time(order.update_date),
+        "release_date": order.release_date,
+        "update_date": order.update_date,
         "solution": order.solution,
         "user_id": order.user.id,
         "technician_id": order.technician_id,
@@ -69,8 +70,8 @@ def get_order_by_id(id: int):
             "type": order.type.value,
             "status": order.status.value,
             "description": order.description,
-            "release_date": format_date_and_time(order.release_date),
-            "update_date": format_date_and_time(order.update_date),
+            "release_date": order.release_date,
+            "update_date": order.update_date,
             "solution": order.solution,
             "user_id": order.user.id,
             "technician_id": order.technician_id,
@@ -88,7 +89,6 @@ def update_order(id: int):
         if not order:
             return jsonify({"msg": "order not found!"}), 404
         keys = ["type", "description"]
-        #print(data.items())
         for key, value in data.items():
         
                 if key in keys:
@@ -129,8 +129,8 @@ def get_order_by_status(order_status: str):
         "type": order.type.value,
         "status": order.status.value,
         "description": order.description,
-        "release_date": format_date_and_time(order.release_date),
-        "update_date": format_date_and_time(order.update_date),
+        "release_date": order.release_date,
+        "update_date": order.update_date,
         "solution": order.solution,
         "user_id": order.user_id,
         "technician_id": order.technician_id
@@ -157,7 +157,7 @@ def get_user_by_order_id(order_id):
                 "id": order.user.id,
                 "name": order.user.name,
                 "email": order.user.email,
-                "birthdate": format_date_and_time(order.user.birthdate),
+                "birthdate": order.user.birthdate,
                 "registration": order.user.registration,
                 "role": order.user.role.value
             }
@@ -177,7 +177,7 @@ def get_technician_by_order_id(order_id):
                 "name": order.technician.name,
                 "email": order.technician.email,
                 "registration": order.user.registration,
-                "birthdate": format_date_and_time(order.user.birthdate),
+                "birthdate": order.user.birthdate,
             }
         }), HTTPStatus.OK
     except NotFound:
