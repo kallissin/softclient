@@ -129,7 +129,7 @@ def update_company(company_id: int):
         if not company:
             raise InvalidIDError
         
-        keys = ["cnpj", "trading_name", "company_name", "role", "username", "password"]
+        keys = ["cnpj", "trading_name", "company_name", "role", "username", "password", "active"]
             
         for key, value in data.items():
             if key in keys:
