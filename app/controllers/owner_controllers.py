@@ -4,26 +4,10 @@ from app.models.owner_model import OwnerModel
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from werkzeug.exceptions import NotFound
 from http import HTTPStatus
-from sqlalchemy.exc import IntegrityError
-from psycopg2.errors import UniqueViolation
+from app.utils.permission import permission_role
 
 
-def create_owner():
-    data = request.get_json()
-    try:
-        OwnerModel.validate_keys(data)
-        owner = OwnerModel(**data)
-
-        current_app.db.session.add(owner)
-        current_app.db.session.commit()
-
-        return jsonify(owner)
-    except KeyRequiredError as err:
-        return jsonify(err.message), err.code
-    except IntegrityError as err:
-        if isinstance(err.orig, UniqueViolation):
-            return jsonify({"message": "username already exists!"}), HTTPStatus.CONFLICT
-
+@permission_role(('super',))
 @jwt_required()
 def get_all_owner():
     list_owner = OwnerModel.query.all()
