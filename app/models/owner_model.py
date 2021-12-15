@@ -1,5 +1,5 @@
 from app.configs.database import db
-from sqlalchemy import Column, String, Integer
+from sqlalchemy import Column, String, Integer, Boolean
 from werkzeug.security import generate_password_hash, check_password_hash
 from dataclasses import dataclass
 
@@ -10,6 +10,7 @@ class OwnerModel(db.Model):
     name: str
     username: str
     role: str
+    active: bool
 
 
     __tablename__ = 'owners'
@@ -19,6 +20,7 @@ class OwnerModel(db.Model):
     username = Column(String(150), unique=True, nullable=False)
     password_hash = Column(String, nullable=False)
     role = Column(String, nullable=False, default='super')
+    active = Column(Boolean, nullable=False, default=True)
 
     @property
     def password(self):
