@@ -11,7 +11,6 @@ def format_datetime(date):
     return date.strftime('%d/%m/%Y')
 
 # RETURNS ALL COMPANIES
-@permission_role(('super',))
 @jwt_required()
 def get_all():
     company = CompanyModel.query.all()
@@ -71,6 +70,8 @@ def get_one(company_id: int):
         "cnpj": cnpj_formatter(company.cnpj),
         "trading_name": company.trading_name,
         "company_name": company.company_name,
+        "active": company.active,
+        "username": company.username,
         "users": new
     }), 200
     
@@ -122,6 +123,7 @@ def get_company_users(company_id: int):
             "id": item.id,
             "name": item.name,
             "email": item.email,
+            "active": item.active,
             "position": item.position,
             "birthdate": format_datetime(item.birthdate)
         }
@@ -154,7 +156,6 @@ def delete_company(company_id: int):
 @permission_role(('admin', 'super'))
 @jwt_required()
 def update_company(company_id: int):
-    user_logged = get_jwt_identity()
     session = current_app.db.session
 
     try:
