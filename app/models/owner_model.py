@@ -2,10 +2,15 @@ from app.configs.database import db
 from sqlalchemy import Column, String, Integer
 from werkzeug.security import generate_password_hash, check_password_hash
 from dataclasses import dataclass
+from sqlalchemy.orm import validates
+
+from app.exceptions.owners_exceptions import KeyRequiredError
 
 
 @dataclass
 class OwnerModel(db.Model):
+    list_keys = ['name', 'username', 'password']
+    
     id: int
     name: str
     username: str
@@ -30,3 +35,18 @@ class OwnerModel(db.Model):
     
     def check_password(self, password_to_compare):
         return check_password_hash(self.password_hash, password_to_compare)
+
+    @classmethod
+    def validate_keys(cls, data: dict):
+        data_keys = list(data.keys())
+        for key in cls.list_keys:
+            if key not in data_keys:
+                raise KeyRequiredError(data)
+
+
+    @validates("name", "username", "password")
+    def formated_keys(self, key, value):
+        if key == 'name':
+            value = value.title()
+        
+        return value
