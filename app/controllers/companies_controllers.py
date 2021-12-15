@@ -3,7 +3,7 @@ from app.exceptions.companies_exceptions import CNPJExistsError, FailedToLoginEr
 from app.utils.cnpj_validator import is_cnpj_valid, cnpj_formatter
 from app.models.companies_model import CompanyModel
 from app.models.user_model import UserModel
-from flask_jwt_extended import create_access_token, jwt_required
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 
 from app.utils.permission import permission_role
 
@@ -11,6 +11,7 @@ def format_datetime(date):
     return date.strftime('%d/%m/%Y')
 
 # RETURNS ALL COMPANIES
+@permission_role(('super',))
 @jwt_required()
 def get_all():
     company = CompanyModel.query.all()
@@ -33,6 +34,7 @@ def get_all():
         formatted_item = {
         "id": item.id,
         "cnpj": cnpj_formatter(item.cnpj),
+        "active": item.active,
         "trading_name": item.trading_name,
         "company_name": item.company_name,
         "users": new
@@ -120,6 +122,7 @@ def delete_company(company_id: int):
 @permission_role(('admin', 'super'))
 @jwt_required()
 def update_company(company_id: int):
+    user_logged = get_jwt_identity()
     session = current_app.db.session
 
     try:
