@@ -11,6 +11,7 @@ class TechnicianModel(db.Model):
     name: str
     email: str
     birthdate: str
+    role: str
 
     __tablename__ = 'technicians'
 
@@ -18,6 +19,7 @@ class TechnicianModel(db.Model):
     name = Column(String(150), nullable=False)
     email = Column(String, nullable=False, unique=True)
     password_hash = Column(String, nullable=False)
+    role = Column(String,default='tech', nullable=False)
     birthdate = Column(Date)
 
     @property
