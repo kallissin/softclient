@@ -1,4 +1,3 @@
-from os import path
 from flask import Blueprint
 from app.controllers.technicians_controllers import create_technician, finalize_order, \
         get_orders_by_technician, get_technician_by_id, get_technicians, login, take_order, update_technician

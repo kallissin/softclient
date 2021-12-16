@@ -1,4 +1,4 @@
-from flask import jsonify, request, current_app
+from flask import jsonify, request, current_app, send_file
 from sqlalchemy.sql.functions import user
 from app.models.order_model import OrderModel
 from http import HTTPStatus
@@ -7,7 +7,13 @@ from app.utils.format_date import format_date_and_time
 from app.utils.permission import permission_role
 from app.exceptions.orders_exceptions import KeyTypeError, InvalidDate
 import sqlalchemy
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from datetime import datetime
+
+
+
 
 
 @jwt_required()
@@ -182,3 +188,84 @@ def get_technician_by_order_id(order_id):
         }), HTTPStatus.OK
     except NotFound:
         return {"message": "Technician not found!"}, HTTPStatus.NOT_FOUND
+
+
+    
+
+@permission_role(('super',))
+@jwt_required()  
+def create_pdf():
+    try:
+        orders = OrderModel.query.all()
+
+        orders_list = []
+
+        for order in orders:
+            if order.status.value != "fechado":
+                orders_list.append(order)
+
+        if orders_list == []:
+            raise NotFound
+
+        cnv = canvas.Canvas("app/files/relatory/tech_relatory.pdf", pagesize=A4)
+
+        cnv.drawImage("app/files/img/softclient.png", 0, 725, 150, 150)
+        cnv.setFont("Helvetica", 14)
+        cnv.drawString(450, 810, f"{format_date_and_time(datetime.now())}")
+        cnv.setFont("Helvetica-Bold", 25)
+        cnv.drawString(80, 720, "Relatório de pedidos não concluídos")
+    
+        cnv.setFont("Helvetica", 14)
+
+        num_page = 1
+        cnv.drawString(565, 20, f"{num_page}")
+
+        y = 615
+        for order in orders_list:
+            cnv.drawString(80, y, f"Id: {order.id}")
+            y -= 17
+            cnv.drawString(80, y, f"Status: {order.status.value}")
+            y -= 17
+            cnv.drawString(80, y, f"Type: {order.type.value}")
+            y -= 17
+            cnv.drawString(80, y, f"Description: {order.description}")
+            y -= 17
+            cnv.drawString(80, y, f"Release_date: {format_date_and_time(order.release_date)}")
+            y -= 17
+            cnv.drawString(80, y, f"Update_date: {format_date_and_time(order.update_date)}")
+            y -= 17
+            cnv.drawString(80, y, f"User id: {order.user.id}")
+            y -= 17
+            cnv.drawString(80, y, f"User name: {order.user.name}")
+            y -= 17
+            cnv.drawString(80, y, f"User email: {order.user.email}")
+            y -= 17
+            cnv.drawString(80, y, f"Company id: {order.user.company.id}")
+            y -= 17
+            cnv.drawString(80, y, f"Company name: {order.user.company.trading_name}")
+
+            if order.technician != None:
+                y -= 17
+                cnv.drawString(80, y, f"Technician id: {order.technician.id}")
+                y -= 17
+                cnv.drawString(80, y, f"Technician name: {order.technician.name}")
+                y -= 17
+                cnv.drawString(80, y, f"Technician email: {order.technician.email}")
+
+            y -= 70
+
+            if y < 200:
+                cnv.showPage()
+                cnv.setFont("Helvetica", 14)
+                cnv.drawImage("app/files/img/softclient.png", 0, 725, 150, 150)
+                cnv.drawString(450, 810, f"{format_date_and_time(datetime.now())}")
+                num_page += 1
+                cnv.drawString(565, 20, f"{num_page}")
+                y = 660
+
+        cnv.save()
+
+        return send_file("files/relatory/tech_relatory.pdf", as_attachment=True), 200
+
+    except NotFound:
+        return jsonify({"msg": "The orders, for the moment, are all completed."}), 404
