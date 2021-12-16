@@ -7,6 +7,7 @@ from app.utils.permission import permission_role
 from app.exceptions.orders_exceptions import KeyTypeError, InvalidDate
 import sqlalchemy
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from app.utils.format_date import format_datetime
 
 
 @jwt_required()
@@ -50,7 +51,7 @@ def create_order():
 
         return jsonify({
         "id": order.id,
-        "type": order.type.value,
+        "type": order.type.value.title(),
         "status": order.status.value,
         "description": order.description,
         "release_date": order.release_date,
@@ -79,7 +80,7 @@ def get_order_by_id(id: int):
         order = OrderModel.query.get_or_404(id)
         return jsonify({
             "id": order.id,
-            "type": order.type.value,
+            "type": order.type.value.title(),
             "status": order.status.value,
             "description": order.description,
             "release_date": order.release_date,
@@ -123,12 +124,9 @@ def update_order(id: int):
     except sqlalchemy.exc.DataError:
         return jsonify({"msg": "type value is wrong"}), 400
     
-        
-    
-
     return jsonify({
         "id": order.id,
-        "type": order.type.value,
+        "type": order.type.value.title(),
         "status": order.status.value,
         "description": order.description,
         "release_date": order.release_date,
@@ -150,10 +148,9 @@ def get_order_by_status(order_status: str):
     try:
         orders= OrderModel.query.filter_by(status=order_status).all()
        
-        
         return jsonify([{
         "id": order.id,
-        "type": order.type.value,
+        "type": order.type.value.title(),
         "status": order.status.value,
         "description": order.description,
         "release_date": order.release_date,
@@ -184,7 +181,7 @@ def delete_order(id: int):
             return jsonify({"message": "unauthorized delete order"}), HTTPStatus.UNAUTHORIZED
         current_app.db.session.delete(order)
         current_app.db.session.commit()
-        return "", HTTPStatus.OK
+        return "", HTTPStatus.NO_CONTENT
     except NotFound:
         return {"message": "Not found."}, HTTPStatus.NOT_FOUND
 
@@ -197,7 +194,7 @@ def get_user_by_order_id(order_id):
                 "id": order.user.id,
                 "name": order.user.name,
                 "email": order.user.email,
-                "birthdate": order.user.birthdate,
+                "birthdate": format_datetime(order.user.birthdate),
                 "position": order.user.position,
                 "role": order.user.role.value
             }
@@ -217,7 +214,7 @@ def get_technician_by_order_id(order_id):
                     "id": order.technician.id,
                     "name": order.technician.name,
                     "email": order.technician.email,
-                    "birthdate": order.user.birthdate,
+                    "birthdate": format_datetime(order.user.birthdate),
                 }
             }), HTTPStatus.OK
         return jsonify({"message": "order was not assigned to a technician"}), HTTPStatus.NOT_FOUND

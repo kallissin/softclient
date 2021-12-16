@@ -1,4 +1,8 @@
-# SoftClient
+<div style="text-align:center">
+  <img src="assets/logo_img.png" alt="SoftClient Logo"/>
+</div>
+
+<br />
 
 Plataforma que registra um técnico em um equipamento de informática, para que ele possa atender chamados das empresas dando manutenção no equipamento no qual ele domina.
 
@@ -10,6 +14,22 @@ Após clonar do Git, digite no terminal:
 - `source venv/bin/activate`
 - `pip install -r requirements.txt`
 - `flask run`
+
+Para criar um usuário do tipo "super", digite o seguinte comando no terminal:
+
+`heroku run --app softclient flask super create name username password`
+
+**Exemplo:**
+
+`heroku run --app softclient flask super create kelvin kallissin 123456`
+
+Para ativar a empresa que irá cadastrar, digite o seguinte comando no terminal:
+
+`heroku run --app softclient flask super active cnpj`
+
+**Exemplo:**
+
+`heroku run --app softclient flask super active 20232212232343`
 
 ## Deploy da aplicação:
 
@@ -78,15 +98,15 @@ Rota responsável por mostrar todos os usuários "owner" cadastrados.
 
 ### Company
 
-Endpoint referente à própria empresa. Aqui, podemos fazer o login, criação de novas empresas, obtenção de todas empresas cadastradas, obtenção de apenas uma empresa (pelo id), obtenção de todos os usuários de determinada empresa e remoção de uma empresa cadastrada. Para a empresa cadastrar um usuário, é necessário de um super usuário e estar ativa.
+Endpoint referente à própria empresa. Aqui, podemos fazer o login, criação de novas empresas, obtenção de todas empresas cadastradas, obtenção de apenas uma empresa (pelo id), obtenção de todos os usuários de determinada empresa e remoção de uma empresa cadastrada. Para a empresa cadastrar uma empresa, é necessário de um super usuário.
 
 #### Login Company
 
-Rota responsável pelo login da empresa. Retorna um token de acesso para que os outros métodos sejam liberados.
+Rota responsável pelo login da empresa. Retorna um token de acesso para que os outros métodos sejam liberados. Essa empresa precisa estar ativada (ativação feita pelo super usuário).
 
-|     **url**      | **method** |  **status**   |
-| :--------------: | :--------: | :-----------: |
-| `/company/login` |   `POST`   | `token - 404` |
+|     **url**      | **method** | **status**  |
+| :--------------: | :--------: | :---------: |
+| `/company/login` |   `POST`   | `200 - 404` |
 
 **BODY**
 
@@ -230,17 +250,60 @@ Rota que pega os usuários cadastrados referentes à empresa.
 ]
 ```
 
-#### DELETE Company
+#### PATCH Company
 
-Rota que deleta uma empresa, recebendo o seu id.
+Rota responsável pela atualização de uma empresa.
 
 |        **url**        | **method** | **status**  |
 | :-------------------: | :--------: | :---------: |
-| `/company/company_id` |  `DELETE`  | `204 - 400` |
+| `/company/company_id` |  `PATCH`   | `200 - 400` |
+
+**BODY**
+
+```json
+{
+  "trading_name": "Soft Client Enterprise"
+}
+```
+
+**RESPONSE**
+
+```json
+{
+  "id": 1,
+  "cnpj": "20.232.212/2323-42",
+  "trading_name": "Soft Client Enterprise",
+  "company_name": "Softclient"
+}
+```
+
+#### PATCH Company active
+
+Rota responsável por desativar uma empresa.
+
+|        **url**        | **method** | **status**  |
+| :-------------------: | :--------: | :---------: |
+| `/company/company_id` |  `PATCH`   | `200 - 400` |
+
+**BODY**
+
+```json
+{
+  "active": False
+}
+```
 
 **RESPONSE - status**
 
-`204`
+```json
+{
+  "id": 1,
+  "cnpj": "20.232.212/2323-42",
+  "trading_name": "Soft Client Enterprise",
+  "company_name": "Softclient",
+  "active": false
+}
+```
 
 ### User
 
@@ -462,7 +525,7 @@ Rota referente a atualização de um usuário, passando o id desse usuário.
 ```json
 {
   "id": 1,
-  "name": "Kelvin Alisson",
+  "name": "Kelvin",
   "email": "kelvin@gmail.com",
   "position": "CTO",
   "active": true,
@@ -488,11 +551,11 @@ Rota referente à criação de um chamado.
 
 ```json
 {
-  "type": "computador",
-  "description": "O computador apresenta falhas contínuas",
+  "type": "nobreak",
+  "description": "No break apitando todo momento",
   "release_date": "22/10/2021",
   "update_date": "16/12/2021",
-  "user_id": 2
+  "user_id": 1
 }
 ```
 
@@ -501,14 +564,20 @@ Rota referente à criação de um chamado.
 ```json
 {
   "id": 1,
-  "type": "computador",
+  "type": "nobreak",
   "status": "aberto",
-  "description": "O computador apresenta falhas contínuas",
-  "release_date": "15/12/2021, 18:45",
-  "update_date": "15/12/2021, 18:45",
+  "description": "No break apitando todo momento",
+  "release_date": "Thu, 16 Dec 2021 17:05:31 GMT",
+  "update_date": "Thu, 16 Dec 2021 17:05:31 GMT",
   "solution": "",
-  "user_id": 2,
-  "technician_id": null
+  "user": {
+    "id": 1,
+    "name": "Kelvin",
+    "email": "kelvin@gmail.com",
+    "position": "CTO",
+    "role": "admin"
+  },
+  "technician": null
 }
 ```
 
@@ -526,14 +595,20 @@ Rota responsável por obter todos os chamados.
 [
   {
     "id": 1,
-    "type": "computador",
+    "type": "nobreak",
     "status": "aberto",
-    "description": "O computador apresenta falhas contínuas",
-    "release_date": "15/12/2021, 18:45",
-    "update_date": "15/12/2021, 18:45",
+    "description": "No break apitando todo momento",
+    "release_date": "Thu, 16 Dec 2021 17:05:31 GMT",
+    "update_date": "Thu, 16 Dec 2021 17:05:31 GMT",
     "solution": "",
-    "user_id": 2,
-    "technician_id": null
+    "user": {
+      "id": 1,
+      "name": "Kelvin",
+      "email": "kelvin@gmail.com",
+      "position": "CTO",
+      "role": "admin"
+    },
+    "technician": null
   }
 ]
 ```
@@ -551,14 +626,20 @@ Rota responsável pela pesquisa do chamado, passando o id dele na requisição.
 ```json
 {
   "id": 1,
-  "type": "computador",
+  "type": "Nobreak",
   "status": "aberto",
-  "description": "O computador apresenta falhas contínuas",
-  "release_date": "15/12/2021, 18:45",
-  "update_date": "15/12/2021, 18:45",
+  "description": "No break apitando todo momento",
+  "release_date": "Thu, 16 Dec 2021 17:05:31 GMT",
+  "update_date": "Thu, 16 Dec 2021 17:05:31 GMT",
   "solution": "",
-  "user_id": 2,
-  "technician_id": null
+  "user": {
+    "id": 1,
+    "name": "Kelvin",
+    "email": "kelvin@gmail.com",
+    "position": "CTO",
+    "role": "admin"
+  },
+  "technician": null
 }
 ```
 
@@ -578,7 +659,7 @@ Rota responsável pela pesquisa do usuário que solicitou o chamado, passando o 
     "id": 2,
     "name": "João Guilherme Filho",
     "email": "joaoguilherme@gmail.com",
-    "birthdate": "01/01/2001, 00:00",
+    "birthdate": "22/05/1993",
     "role": "user"
   }
 }
@@ -619,21 +700,65 @@ Rota responsável por obter os chamados, passando na rota os status disponíveis
 [
   {
     "id": 1,
-    "type": "computador",
-    "status": "fechado",
-    "description": "O computador apresenta falhas contínuas",
-    "release_date": "15/12/2021, 18:45",
-    "update_date": "15/12/2021, 19:02",
-    "solution": "Troca de algumas peças do computador, que estavam falhando. Todas elas foram verificadas.",
-    "user_id": 2,
-    "technician_id": 1
+    "type": "Nobreak",
+    "status": "aberto",
+    "description": "No break apitando todo momento",
+    "release_date": "Thu, 16 Dec 2021 17:05:31 GMT",
+    "update_date": "Thu, 16 Dec 2021 17:05:31 GMT",
+    "solution": "",
+    "user": {
+      "id": 1,
+      "name": "Kelvin",
+      "email": "kelvin@gmail.com",
+      "position": "CTO",
+      "role": "admin"
+    },
+    "technician": null
   }
 ]
 ```
 
-#### DELETE ORDER
+#### PATCH Order by id
 
-Rota responsável por fazer a remoção de um chamado, passando o id do chamado pra ela.
+Rota responsável pela atualização de um chamado, passando o id dele na rota.
+
+|      **url**       | **method** |       **status**        |
+| :----------------: | :--------: | :---------------------: |
+| `/orders/order_id` |  `PATCH`   | `200 - 400 - 401 - 404` |
+
+**BODY**
+
+```json
+{
+  "description": "Apresenta falhas contínuas."
+}
+```
+
+**RESPONSE**
+
+```json
+{
+  "id": 1,
+  "type": "Nobreak",
+  "status": "aberto",
+  "description": "Apresenta falhas contínuas.",
+  "release_date": "Thu, 16 Dec 2021 17:05:31 GMT",
+  "update_date": "Thu, 16 Dec 2021 17:05:31 GMT",
+  "solution": "",
+  "user": {
+    "id": 1,
+    "name": "João",
+    "email": "joaoguilherme@gmail.com",
+    "position": "CTO",
+    "role": "admin"
+  },
+  "technician": null
+}
+```
+
+#### DELETE Order
+
+Rota responsável por fazer a remoção de um chamado, passando o id dele na rota.
 
 |      **url**       | **method** | **status**  |
 | :----------------: | :--------: | :---------: |
@@ -680,10 +805,10 @@ Rota responsável pelo login do técnico. Retorna um token de acesso para que os
 
 ```json
 {
-  "name": "Gustavo Martins",
-  "email": "gustavomartins@gmail.com",
+  "name": "Erick Lander",
+  "email": "ericklander@gmail.com",
   "password": "123456",
-  "birthdate": "27/12/1985"
+  "birthdate": "03/05/1989"
 }
 ```
 
@@ -692,9 +817,10 @@ Rota responsável pelo login do técnico. Retorna um token de acesso para que os
 ```json
 {
   "id": 1,
-  "name": "Gustavo Martins",
-  "email": "gustavomartins@gmail.com",
-  "birthdate": "27/12/1985"
+  "name": "Erick Lander",
+  "email": "ericklander@gmail.com",
+  "birthdate": "03/05/1989",
+  "role": "tech"
 }
 ```
 
@@ -710,9 +836,10 @@ Rota responsável pela pesquisa de todos os técnicos registrados na API.
 [
   {
     "id": 1,
-    "name": "Gustavo Martins",
-    "email": "gustavomartins@gmail.com",
-    "birthdate": "27/12/1985"
+    "name": "Erick Lander",
+    "email": "ericklander@gmail.com",
+    "birthdate": "03/05/1989",
+    "role": "tech"
   }
 ]
 ```
@@ -728,9 +855,10 @@ Rota responsável por trazer os dados de um técnico, passando o id dele na rota
 ```json
 {
   "id": 1,
-  "name": "Gustavo Martins",
-  "email": "gustavomartins@gmail.com",
-  "birthdate": "27/12/1985"
+  "name": "Erick Lander",
+  "email": "ericklander@gmail.com",
+  "birthdate": "03/05/1989",
+  "role": "tech"
 }
 ```
 
@@ -745,22 +873,22 @@ Rota responsável por obter à qua(is)l chamado(s) aquele técnico foi relaciona
 ```json
 [
   {
-    "id": 5,
-    "type": "computador",
-    "status": "aberto",
-    "description": "Realizar uma averiguação do computador, pois está travando muito.",
-    "release_date": "Mon, 13 Dec 2021 18:32:43 GMT",
-    "update_date": "Mon, 13 Dec 2021 18:32:43 GMT",
+    "id": 1,
+    "type": "nobreak",
+    "status": "em_atendimento",
+    "description": "Apresenta falhas contínuas.",
+    "release_date": "Thu, 16 Dec 2021 17:05:31 GMT",
+    "update_date": "Thu, 16 Dec 2021 17:32:12 GMT",
     "solution": "",
     "user": {
-      "id": 3,
-      "name": "Guilherme",
-      "email": "guilherme@gmail.com",
-      "role": "admin",
+      "id": 1,
+      "name": "João",
+      "email": "joaoguilherme@gmail.com",
+      "position": "CTO",
       "company": {
         "id": 1,
-        "cnpj": "00.500.497/0001-07",
-        "trading_name": "Soft Client Inc"
+        "cnpj": "52.468.355/0001-03",
+        "trading_name": "Microsoft Enterprise"
       }
     }
   }
@@ -779,7 +907,7 @@ Rota responsável pela atualização dos dados do técnico, passando o id do té
 
 ```json
 {
-  "name": "Gustavo Martins Ferreira"
+  "name": "Erick"
 }
 ```
 
@@ -788,9 +916,10 @@ Rota responsável pela atualização dos dados do técnico, passando o id do té
 ```json
 {
   "id": 1,
-  "name": "Gustavo Martins Ferreira",
-  "email": "gustavomartins@gmail.com",
-  "birthdate": "27/12/1985"
+  "name": "Erick",
+  "email": "ericklander@gmail.com",
+  "birthdate": "03/05/1989",
+  "role": "tech"
 }
 ```
 
@@ -809,15 +938,15 @@ Rota responsável pelo técnico assumir um chamado em aberto. Para isso, é nece
   "order": {
     "id": 1,
     "status": "em_atendimento",
-    "type": "computador",
-    "description": "O computador apresenta falhas contínuas",
-    "release_date": "Wed, 15 Dec 2021 18:45:47 GMT",
-    "update_date": "Wed, 15 Dec 2021 18:59:47 GMT",
+    "type": "nobreak",
+    "description": "Apresenta falhas contínuas.",
+    "release_date": "Thu, 16 Dec 2021 17:05:31 GMT",
+    "update_date": "Thu, 16 Dec 2021 17:32:12 GMT",
     "user": {
-      "id": 2,
-      "name": "João Guilherme Filho",
+      "id": 1,
+      "name": "João",
       "email": "joaoguilherme@gmail.com",
-      "position": "developer",
+      "position": "CTO",
       "birthdate": "01/01/2001"
     }
   }
@@ -836,7 +965,7 @@ Rota responsável pelo técnico finalizar aquele chamado. Para isso, é necessá
 
 ```json
 {
-  "solution": "Troca de algumas peças do computador, que estavam falhando. Todas elas foram verificadas."
+  "solution": "COMPRA DE UM NOVO NOBREAK."
 }
 ```
 
@@ -847,16 +976,16 @@ Rota responsável pelo técnico finalizar aquele chamado. Para isso, é necessá
   "order": {
     "id": 1,
     "status": "fechado",
-    "type": "computador",
-    "description": "O computador apresenta falhas contínuas",
-    "release_date": "Wed, 15 Dec 2021 18:45:47 GMT",
-    "update_date": "Wed, 15 Dec 2021 19:02:15 GMT",
-    "solution": "Troca de algumas peças do computador, que estavam falhando. Todas elas foram verificadas.",
+    "type": "nobreak",
+    "description": "Apresenta falhas contínuas.",
+    "release_date": "Thu, 16 Dec 2021 17:05:31 GMT",
+    "update_date": "Thu, 16 Dec 2021 17:34:30 GMT",
+    "solution": "COMPRA DE UM NOVO NOBREAK.",
     "user": {
-      "id": 2,
-      "name": "João Guilherme Filho",
+      "id": 1,
+      "name": "João",
       "email": "joaoguilherme@gmail.com",
-      "position": "developer",
+      "position": "CTO",
       "birthdate": "01/01/2001"
     }
   }
