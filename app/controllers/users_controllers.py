@@ -19,14 +19,15 @@ def format_datetime(date):
 @jwt_required()
 def create_user():
     user_logged = get_jwt_identity()
-
+    print(user_logged)
     try:
         data = request.get_json()
         data['active'] = True
-        if user_logged['email']:
+        if 'email' in user_logged.keys():
             user = UserModel.query.filter_by(id=user_logged['id']).first()
             company = CompanyModel.query.filter_by(id=user.company.id).first()
             data['company_id'] = company.id
+    
         else:
             data['company_id'] = user_logged['id']
         
