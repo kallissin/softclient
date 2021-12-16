@@ -4,7 +4,7 @@ from app.utils.cnpj_validator import is_cnpj_valid, cnpj_formatter
 from app.models.companies_model import CompanyModel
 from app.models.user_model import UserModel
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-
+from http import HTTPStatus
 from app.utils.permission import permission_role
 
 def format_datetime(date):
@@ -131,27 +131,6 @@ def get_company_users(company_id: int):
     
     return jsonify(new), 200
 
-
-
-# DELETES A SINGLE COMPANY BY ID   
-@jwt_required()    
-def delete_company(company_id: int):
-    try:
-        query = CompanyModel.query.get(company_id)
-
-        if not query:
-            raise InvalidIDError
-
-        current_app.db.session.delete(query)
-        current_app.db.session.commit()
-
-        return "", 204     
-    
-    except InvalidIDError as err:
-        return err.message      
-
-
-
 # UPDATES COMPANY
 @permission_role(('admin', 'super'))
 @jwt_required()
@@ -202,6 +181,7 @@ def update_company(company_id: int):
             "cnpj": cnpj_formatter(company.cnpj),
             "trading_name": company.trading_name,
             "company_name": company.company_name,
+            "active": company.active,
     }), 200
 
     except InvalidIDError as err:
@@ -292,7 +272,7 @@ def login():
             raise FailedToLoginError
 
         if company.check_password(password):
-            return jsonify({"token": create_access_token(company)})
+            return jsonify({"token": create_access_token(company)}), HTTPStatus.OK
         
     except FailedToLoginError as err:
-        return err.message  
+        return err.message
