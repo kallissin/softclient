@@ -17,16 +17,68 @@ Após clonar do Git, digite no terminal:
 
 ## Endpoints
 
-1. Company
+1. Owners
+2. Company
    - Login Company
-2. User
+3. User
    - Login User
-3. Orders
-4. Technicians
+4. Orders
+5. Technicians
+
+### Owners
+
+Endpoint referente aos donos da empresa, onde podemos fazer fazer login e listar todos os donos.
+
+#### Login Owner
+
+Rota responsável pelo login do usuário "owner". Retorna um token de acesso, para que o método GET seja liberado.
+
+|    **url**     | **method** | **status**  |
+| :------------: | :--------: | :---------: |
+| `/owner/login` |   `POST`   | `200 - 404` |
+
+**BODY**
+
+```json
+{
+  "username": "odaairlopes",
+  "password": "123456"
+}
+```
+
+**RESPONSE**
+
+```json
+{
+  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTYzOTU5MTA2MywianRpIjoiNTU3MTczNDktOGRkZS00ZmM5LWI1NzktYzE3OGQ5NTI4ZTE1IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6eyJpZCI6MSwibmFtZSI6Ik9kYWlyIiwidXNlcm5hbWUiOiJvZGFhaXJsb3BlcyIsInJvbGUiOiJzdXBlciIsImFjdGl2ZSI6dHJ1ZX0sIm5iZiI6MTYzOTU5MTA2MywiZXhwIjoxNjM5NTkxOTYzfQ.q7nCO3NVPcSOdIZalcQNKOLtVw7u-JdbeJAoUqa5dcQ"
+}
+```
+
+#### GET Owner
+
+Rota responsável por mostrar todos os usuários "owner" cadastrados.
+
+| **url**  | **method** | **status** |
+| :------: | :--------: | :--------: |
+| `/owner` |   `GET`    |   `200`    |
+
+**RESPONSE**
+
+```json
+[
+  {
+    "id": 1,
+    "name": "Odair",
+    "username": "odaairlopes",
+    "role": "super",
+    "active": true
+  }
+]
+```
 
 ### Company
 
-Endpoint referente ao login da empresa, criação da empresa, obtenção de todas empresas cadastradas, obtenção de apenas uma empresa, obtenção de todos os usuários de determinada empresa e remoção de uma empresa cadastrada.
+Endpoint referente à própria empresa. Aqui, podemos fazer o login, criação de novas empresas, obtenção de todas empresas cadastradas, obtenção de apenas uma empresa (pelo id), obtenção de todos os usuários de determinada empresa e remoção de uma empresa cadastrada. Para a empresa cadastrar um usuário, é necessário de um super usuário e estar ativa.
 
 #### Login Company
 
@@ -40,8 +92,8 @@ Rota responsável pelo login da empresa. Retorna um token de acesso para que os 
 
 ```json
 {
-  "username": "kenzie",
-  "password": "123456"
+  "username": "sofclient",
+  "password": "softclient1234"
 }
 ```
 
@@ -49,7 +101,43 @@ Rota responsável pelo login da empresa. Retorna um token de acesso para que os 
 
 ```json
 {
-  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTYzOTQxNzU3NCwianRpIjoiZjk1MTA1NDMtYTA2MC00MWYxLWIwOTItYzZjYTE0OTM1YzAzIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6eyJpZCI6MSwiY25waiI6IjIwMjMyMjEyMjMyMzQyIiwidHJhZGluZ19uYW1lIjoiS2VsdmluaG8gRGUgQ1x1MDBmM2RpZ28gTHRkYS4iLCJjb21wYW55X25hbWUiOiJLZWx2aW4gVGkgVWx0cmEgU3BlZWQiLCJ1c2VybmFtZSI6ImtlbnppZSIsInJvbGUiOiJhZG1pbiJ9LCJuYmYiOjE2Mzk0MTc1NzQsImV4cCI6MTYzOTQxODQ3NH0.PBCz4BG683VB4uIW1H0Ki2HSSqaQQu7WOVNWniRuEqI"
+  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTYzOTU5MTg1NywianRpIjoiZmJkNWYzMDEtZjJlMS00MDhkLWE5YjUtNzg3M2U4YmFiZjE4IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6eyJpZCI6MSwiYWN0aXZlIjpmYWxzZSwiY25waiI6IjIwMjMyMjEyMjMyMzQyIiwidHJhZGluZ19uYW1lIjoiU29mdCBDbGllbnQgSW5jLiIsImNvbXBhbnlfbmFtZSI6IlNvZnRjbGllbnQiLCJ1c2VybmFtZSI6InNvZmNsaWVudCIsInJvbGUiOiJhZG1pbiJ9LCJuYmYiOjE2Mzk1OTE4NTcsImV4cCI6MTYzOTU5Mjc1N30.TyrNl7sgcVeeI4RjJehpUU_Ln-zD2BLD3M7tAuXCPP4"
+}
+```
+
+#### POST Company
+
+Rota para cadastrar uma empresa.
+
+|  **url**   | **method** | **status**  |
+| :--------: | :--------: | :---------: |
+| `/company` |   `POST`   | `201 - 400` |
+
+Formato dos campos:
+
+- **"cnpj"**: deve ser colocado todos os 14 dígitos, sem pontuação;
+
+**BODY**
+
+```json
+{
+  "cnpj": "20232212232342",
+  "trading_name": "Soft Client Inc.",
+  "company_name": "SoftClient",
+  "username": "sofclient",
+  "password": "softclient1234"
+}
+```
+
+**RESPONSE**
+
+```json
+{
+  "id": 1,
+  "active": false,
+  "cnpj": "20.232.212/2323-42",
+  "trading_name": "Soft Client Inc.",
+  "company_name": "Softclient"
 }
 ```
 
@@ -67,49 +155,26 @@ Rota para obter todas as empresas cadastradas.
 [
   {
     "id": 1,
-    "cnpj": "00.500.497/0001-07",
+    "cnpj": "20.232.212/2323-42",
     "trading_name": "Soft Client Inc.",
     "company_name": "Softclient",
     "users": []
+  },
+  {
+    "id": 2,
+    "cnpj": "10.123.286/0001-56",
+    "trading_name": "Wal-Mart Inc.",
+    "company_name": "Walmart",
+    "users": []
+  },
+  {
+    "id": 3,
+    "cnpj": "08.522.687/0001-37",
+    "trading_name": "Microsoft Inc.",
+    "company_name": "Microsoft",
+    "users": []
   }
 ]
-```
-
-#### POST Company
-
-Rota para cadastrar uma empresa.
-
-|  **url**   | **method** | **status**  |
-| :--------: | :--------: | :---------: |
-| `/company` |   `POST`   | `201 - 400` |
-
-Formato dos campos:
-
-- **"cnpj"**: deve ser colocado todos os 14 dígitos, sem pontuação;
-- **"username"**: string, o usuário que decide o username;
-- **"password"**: string, o usuário que decide o password;
-
-**BODY**
-
-```json
-{
-  "cnpj": "00500497000107",
-  "trading_name": "Soft Client Inc.",
-  "company_name": "SoftClient",
-  "username": "kenzie",
-  "password": "123456"
-}
-```
-
-**RESPONSE**
-
-```json
-{
-  "id": 1,
-  "cnpj": "00.500.497/0001-07",
-  "trading_name": "Soft Client Inc.",
-  "company_name": "Softclient"
-}
 ```
 
 #### GET One Company
@@ -124,25 +189,13 @@ Rota que pega uma única empresa, pelo seu id.
 
 ```json
 {
-  "id": 2,
-  "cnpj": "81.124.839/0001-33",
-  "trading_name": "Wal-Mart Inc",
-  "company_name": "Walmart",
+  "id": 1,
+  "cnpj": "20.232.212/2323-42",
+  "trading_name": "Soft Client Inc.",
+  "company_name": "Softclient",
   "users": []
 }
 ```
-
-#### DELETE Company
-
-Rota que deleta uma empresa, recebendo o seu id.
-
-|        **url**        | **method** | **status**  |
-| :-------------------: | :--------: | :---------: |
-| `/company/company_id` |  `DELETE`  | `204 - 400` |
-
-**RESPONSE - status**
-
-`204`
 
 #### GET Company Users
 
@@ -177,20 +230,32 @@ Rota que pega os usuários cadastrados referentes à empresa.
 ]
 ```
 
+#### DELETE Company
+
+Rota que deleta uma empresa, recebendo o seu id.
+
+|        **url**        | **method** | **status**  |
+| :-------------------: | :--------: | :---------: |
+| `/company/company_id` |  `DELETE`  | `204 - 400` |
+
+**RESPONSE - status**
+
+`204`
+
 ### User
 
-Endpoint referente a criação de usuário, alteração de usuários, obtenção de todos os usuários, obtenção de usuário por filtragem (email e nome), remoção de um usuário, pesquisa de usuários que solicitaram um serviço e pesquisa de um usuário de certa empresa.
+Endpoint referente aos usuários que fazem parte da empresa. Aqui podemos fazer a criação de usuário, alteração de usuários, obtenção de todos os usuários, obtenção de usuário por filtragem (email e nome), remoção de um usuário, pesquisa de usuários que solicitaram um serviço e pesquisa de um usuário de certa empresa.
 
 #### Login User
 
-Rota responsável pela autenticação do usuário, para ter acesso aos métodos.
+Rota responsável pelo login do usuário. Retorna um token de acesso para que os outros métodos sejam liberados.
 
 **BODY**
 
 ```json
 {
-  "email": "guilherme@gmail.com",
-  "password": "aa1123"
+  "email": "kelvin@gmail.com",
+  "password": "kelvin1234"
 }
 ```
 
@@ -198,13 +263,13 @@ Rota responsável pela autenticação do usuário, para ter acesso aos métodos.
 
 ```json
 {
-  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTYzOTQyMDg0NywianRpIjoiMjUxMjMwYjMtNzMzNS00ZTBhLWJiZjgtYzVjMWZhMTljZGM3IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6eyJpZCI6MywibmFtZSI6Ikd1aWxoZXJtZSIsImVtYWlsIjoiZ3VpbGhlcm1lQGdtYWlsLmNvbSIsImJpcnRoZGF0ZSI6IkZyaSwgMjIgTm92IDE5OTYgMDA6MDA6MDAgR01UIiwiYWN0aXZlIjp0cnVlLCJyb2xlIjoiYWRtaW4ifSwibmJmIjoxNjM5NDIwODQ3LCJleHAiOjE2Mzk0MjE3NDd9.-rPdtRqXgaHYRwUm8CDw5DbagGAQEd927Of9tRa5fbo"
+  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTYzOTU5MzI0NywianRpIjoiYzUwMThhNmEtYWI2Mi00NWI2LTkyM2UtNTA5MzZlNWU0NTBjIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6eyJpZCI6MSwibmFtZSI6IktlbHZpbiIsImVtYWlsIjoia2VsdmluQGdtYWlsLmNvbSIsInBvc2l0aW9uIjoiQ1RPIiwiYWN0aXZlIjp0cnVlLCJiaXJ0aGRhdGUiOiIyMi8wNS8xOTkzIiwicm9sZSI6ImFkbWluIiwiY29tcGFueV9uYW1lIjoiU29mdGNsaWVudCJ9LCJuYmYiOjE2Mzk1OTMyNDcsImV4cCI6MTYzOTU5NDE0N30.UpfscEuF4p-BpO1NJtJb4RkKII-GvDxA-pfJyu4OjC4"
 }
 ```
 
 #### POST User
 
-Rota referente a criação de um usuário.
+Rota referente a criação de um usuário. Necessário utilizar o token da empresa, para fazer a criação do seu usuário.
 
 | **url** | **method** |    **status**     |
 | :-----: | :--------: | :---------------: |
@@ -223,13 +288,12 @@ Formato dos campos:
 
 ```json
 {
-  "name": "Joãozinho Camargo",
-  "email": "joaocamargo@gmail.com.br",
-  "password": "12345",
-	"position": "Técnico de Informática",
-  "birthdate": "22/11/1996",
-  "role": "user",
-	"active": true,
+  "name": "Kelvin",
+  "email": "kelvin@gmail.com",
+  "password": "kelvin1234",
+  "birthdate": "22/05/1993",
+  "position": "CTO",
+  "role": "admin",
   "company_id": 1
 }
 ```
@@ -238,12 +302,13 @@ Formato dos campos:
 
 ```json
 {
-  "id": 3,
-  "name": "Joãozinho Camargo",
-  "email": "joaocamargo@gmail.com.br",
-  "birthdate": "22/11/1996",
+  "id": 1,
+  "name": "Kelvin",
+  "email": "kelvin@gmail.com",
+  "position": "CTO",
+  "birthdate": "22/05/1993",
   "active": true,
-  "role": "user",
+  "role": "admin",
   "company_name": "Softclient"
 }
 ```
@@ -262,15 +327,16 @@ Rota para obter todos os usuários cadastrados.
 [
   {
     "id": 1,
-    "name": "Zézinho Da Silva",
-    "email": "zezinhosilva@gmail.com.br",
+    "name": "Kelvin",
+    "email": "kelvin@gmail.com",
+    "position": "CTO",
     "active": true,
-    "birthdate": "22/11/1996",
-    "role": "tech",
+    "birthdate": "22/05/1993",
+    "role": "admin",
     "company": {
       "id": 1,
       "trading_name": "Soft Client Inc.",
-      "cnpj": "00500497000107"
+      "cnpj": "20232212232342"
     }
   }
 ]
@@ -289,15 +355,16 @@ Rota referente a pesquisa de um usuário, passando o id dele.
 ```json
 {
   "id": 1,
-  "name": "Zézinho Da Silva",
-  "email": "zezinhosilva@gmail.com.br",
+  "name": "Kelvin",
+  "email": "kelvin@gmail.com",
+  "position": "CTO",
   "active": true,
-  "birthdate": "22/11/1996",
-  "role": "basic",
+  "birthdate": "22/05/1993",
+  "role": "admin",
   "company": {
     "id": 1,
     "trading_name": "Soft Client Inc.",
-    "cnpj": "00500497000107"
+    "cnpj": "20232212232342"
   }
 }
 ```
@@ -314,68 +381,18 @@ Rota referente a pesquisa de um usuário, passando o nome dele.
 
 ```json
 {
-  "id": 6,
-  "name": "Marcelo",
-  "email": "marcelo@gmail.com.br",
+  "id": 1,
+  "name": "Kelvin",
+  "email": "kelvin@gmail.com",
+  "position": "CTO",
   "active": true,
-  "birthdate": "22/11/1996",
-  "role": "tech",
+  "birthdate": "22/05/1993",
+  "role": "admin",
   "company": {
     "id": 1,
     "trading_name": "Soft Client Inc.",
-    "cnpj": "00500497000107"
+    "cnpj": "20232212232342"
   }
-}
-```
-
-#### PATCH User
-
-Rota referente a atualização de um usuário, passando o id desse usuário.
-
-|     **url**     | **method** | **status**  |
-| :-------------: | :--------: | :---------: |
-| `/user/user_id` |  `PATCH`   | `200 - 404` |
-
-**BODY**
-
-```json
-{
-  "name": "Marcelo Moraes"
-}
-```
-
-**RESPONSE**
-
-```json
-{
-  "id": 6,
-  "name": "Marcelo Moraes",
-  "email": "marcelo@gmail.com.br",
-  "active": true,
-  "birthdate": "22/11/1996",
-  "role": "tech",
-  "company_name": "Softclient"
-}
-```
-
-#### DELETE User
-
-Rota responsável pela remoção do usuário, passando o id dele.
-
-|     **url**     | **method** | **status**  |
-| :-------------: | :--------: | :---------: |
-| `/user/user_id` |  `DELETE`  | `200 - 404` |
-
-**RESPONSE**
-
-```json
-{
-  "id": 1,
-  "name": "Marcelo",
-  "email": "marcelo@gmail.com.br",
-  "birthdate": "Fri, 22 Nov 1996 00:00:00 GMT",
-  "active": true,
-  "role": "tech"
 }
 ```
 
@@ -393,7 +410,7 @@ Rota responsável pela pesquisa de uma empresa utilizando o id do usuário.
 {
   "company": {
     "id": 1,
-    "cnpj": "00500497000107",
+    "cnpj": "20232212232342",
     "trading_name": "Soft Client Inc.",
     "company_name": "Softclient"
   }
@@ -402,7 +419,7 @@ Rota responsável pela pesquisa de uma empresa utilizando o id do usuário.
 
 #### GET Order by user id
 
-Rota responsável pela pesquisa de um chamado feito pelo usuário.
+Rota responsável pela pesquisa de um chamado utilizando o id do usuário. Para essa pesquisa, é necessário passar o token do usuário com a role 'user'.
 
 |        **url**        | **method** | **status**  |
 | :-------------------: | :--------: | :---------: |
@@ -411,20 +428,53 @@ Rota responsável pela pesquisa de um chamado feito pelo usuário.
 **RESPONSE**
 
 ```json
-{
-  "user": {
-    "id": 3,
-    "name": "Guilherme",
-    "email": "guilherme@gmail.com",
-    "birthdate": "22/11/1996",
-    "role": "admin"
+[
+  {
+    "id": 1,
+    "type": "computador",
+    "status": "fechado",
+    "description": "O computador apresenta falhas contínuas",
+    "release_date": "Wed, 15 Dec 2021 18:45:47 GMT",
+    "update_date": "Wed, 15 Dec 2021 19:02:15 GMT",
+    "solution": "Troca de algumas peças do computador, que estavam falhando. Todas elas foram verificadas."
   }
+]
+```
+
+#### PATCH User
+
+Rota referente a atualização de um usuário, passando o id desse usuário.
+
+|     **url**     | **method** | **status**  |
+| :-------------: | :--------: | :---------: |
+| `/user/user_id` |  `PATCH`   | `200 - 404` |
+
+**BODY**
+
+```json
+{
+  "name": "Kelvin Alisson"
+}
+```
+
+**RESPONSE**
+
+```json
+{
+  "id": 1,
+  "name": "Kelvin Alisson",
+  "email": "kelvin@gmail.com",
+  "position": "CTO",
+  "active": true,
+  "birthdate": "22/05/1993",
+  "role": "admin",
+  "company_name": "Softclient"
 }
 ```
 
 ### Order
 
-Endpoint referente a criação de um chamado, alteração de usuários, obtenção de todos os chamados, remoção de um chamado, pesquisa do usuário que fez um chamado e pesquisa de um técnico de pelo chamado.
+Endpoint referente a criação de um chamado, alteração de usuários, obtenção de todos os chamados, remoção de um chamado, pesquisa do usuário que fez um chamado e pesquisa de um técnico de pelo chamado. O chamado só pode ser criado por um usuário que tenha a role de 'user', sendo necessário o token desse usuário.
 
 #### POST Order
 
@@ -438,13 +488,11 @@ Rota referente à criação de um chamado.
 
 ```json
 {
-  "status": "aberto",
   "type": "computador",
-  "description": "Realizar uma averiguação do computador, pois está travando muito.",
-  "release_date": "13/12/2021",
-  "update_date": "13/12/2021",
-  "user_id": 3,
-  "technician_id": 1
+  "description": "O computador apresenta falhas contínuas",
+  "release_date": "22/10/2021",
+  "update_date": "16/12/2021",
+  "user_id": 2
 }
 ```
 
@@ -452,37 +500,40 @@ Rota referente à criação de um chamado.
 
 ```json
 {
+  "id": 1,
   "type": "computador",
   "status": "aberto",
-  "description": "Realizar uma averiguação do computador, pois está travando muito.",
-  "release_date": "13/12/2021",
-  "update_date": "13/12/2021",
+  "description": "O computador apresenta falhas contínuas",
+  "release_date": "15/12/2021, 18:45",
+  "update_date": "15/12/2021, 18:45",
   "solution": "",
-  "user_id": 3,
-  "technician_id": 1
+  "user_id": 2,
+  "technician_id": null
 }
 ```
 
 #### GET Order
 
 Rota responsável por obter todos os chamados.
-| **url** | **method** | **status** |
-|:---------:|:----------:|:----------:|
-| `/orders` | `GET` | `200` |
+
+|  **url**  | **method** | **status** |
+| :-------: | :--------: | :--------: |
+| `/orders` |   `GET`    |   `200`    |
 
 **RESPONSE**
 
 ```json
 [
   {
-    "id": 3,
+    "id": 1,
     "type": "computador",
     "status": "aberto",
-    "description": "Realizar uma averiguação do computador, pois está travando muito.",
-    "release_date": "13/12/2021",
-    "update_date": "13/12/2021",
+    "description": "O computador apresenta falhas contínuas",
+    "release_date": "15/12/2021, 18:45",
+    "update_date": "15/12/2021, 18:45",
     "solution": "",
-    "user_id": 3
+    "user_id": 2,
+    "technician_id": null
   }
 ]
 ```
@@ -499,14 +550,15 @@ Rota responsável pela pesquisa do chamado, passando o id dele na requisição.
 
 ```json
 {
-  "type": "notebook",
+  "id": 1,
+  "type": "computador",
   "status": "aberto",
-  "description": "Notebook esquentando muito e desligando as vezes.",
-  "release_date": "13/12/2021, 18:55",
-  "update_date": "13/12/2021, 18:55",
+  "description": "O computador apresenta falhas contínuas",
+  "release_date": "15/12/2021, 18:45",
+  "update_date": "15/12/2021, 18:45",
   "solution": "",
   "user_id": 2,
-  "technician_id": 1
+  "technician_id": null
 }
 ```
 
@@ -523,11 +575,11 @@ Rota responsável pela pesquisa do usuário que solicitou o chamado, passando o 
 ```json
 {
   "user": {
-    "id": 3,
-    "name": "Guilherme",
-    "email": "guilherme@gmail.com",
-    "birthdate": "22/11/1996",
-    "role": "admin"
+    "id": 2,
+    "name": "João Guilherme Filho",
+    "email": "joaoguilherme@gmail.com",
+    "birthdate": "01/01/2001, 00:00",
+    "role": "user"
   }
 }
 ```
@@ -553,6 +605,32 @@ Rota responsável pela pesquisa do técnico que realizará a manutenção, passa
 }
 ```
 
+#### GET Order by status
+
+Rota responsável por obter os chamados, passando na rota os status disponíveis (aberto, em_atendimento, fechado) e o token do usuário que criou esse chamado.
+
+|        **url**         | **method** | **status**  |
+| :--------------------: | :--------: | :---------: |
+| `/orders/order_status` |   `GET`    | `200 - 404` |
+
+**RESPONSE**
+
+```json
+[
+  {
+    "id": 1,
+    "type": "computador",
+    "status": "fechado",
+    "description": "O computador apresenta falhas contínuas",
+    "release_date": "15/12/2021, 18:45",
+    "update_date": "15/12/2021, 19:02",
+    "solution": "Troca de algumas peças do computador, que estavam falhando. Todas elas foram verificadas.",
+    "user_id": 2,
+    "technician_id": 1
+  }
+]
+```
+
 #### DELETE ORDER
 
 Rota responsável por fazer a remoção de um chamado, passando o id do chamado pra ela.
@@ -567,7 +645,7 @@ Rota responsável por fazer a remoção de um chamado, passando o id do chamado 
 
 ### Technician
 
-Endpoint referente ao login do técnico, inserção de um técnico, alteração de dados do técnico, obtenção de todos os técnicos, obtenção de um técnico apenas, obtenção dos chamados que estão relacionados à um técnico e exclusão de um técnico.
+Endpoint referente ao técnicos responsáveis por responderem aos chamados. Aqui podemso fazer o login do técnico, inserção de um técnico, alteração de dados do técnico, obtenção de todos os técnicos, obtenção de um técnico apenas, obtenção dos chamados que estão relacionados à um técnico e exclusão de um técnico. Para a criação de um técnico, é necessário o token da empresa. Para as outras rotas, necessário o token do próprio técnico, obtido no login.
 
 #### LOGIN Technician
 
@@ -590,7 +668,7 @@ Rota responsável pelo login do técnico. Retorna um token de acesso para que os
 
 ```json
 {
-  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTYzOTQyNzYxMywianRpIjoiMGUzZmRhY2UtNzM4Yi00MzkwLWEwMWEtZDMzZjZjMDU2M2VlIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6eyJpZCI6NCwibmFtZSI6Ikd1c3Rhdm8gTWFydGlucyIsImVtYWlsIjoiZ3VzdGF2b21hcnRpbnNAZ21haWwuY29tIiwiYmlydGhkYXRlIjoiRnJpLCAyNyBEZWMgMTk4NSAwMDowMDowMCBHTVQifSwibmJmIjoxNjM5NDI3NjEzLCJleHAiOjE2Mzk0Mjg1MTN9.RPw18icuvjCrtpqhY1dEWPGWVYCK1yG4PxMz7lzy4EQ"
+  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTYzOTU5NDQzMywianRpIjoiYjJiNDMyZWUtMzlhMC00MTNmLTlhOWYtYTQ5Y2QwYjM4NWQzIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6eyJpZCI6MSwibmFtZSI6Ikd1c3Rhdm8gTWFydGlucyIsImVtYWlsIjoiZ3VzdGF2b21hcnRpbnNAZ21haWwuY29tIiwiYmlydGhkYXRlIjoiRnJpLCAyNyBEZWMgMTk4NSAwMDowMDowMCBHTVQifSwibmJmIjoxNjM5NTk0NDMzLCJleHAiOjE2Mzk1OTUzMzN9.snEqX5nCWlItBDEcOEVXFZHOKYgwrgrFdPgeNGyEwAs"
 }
 ```
 
@@ -605,7 +683,7 @@ Rota responsável pelo login do técnico. Retorna um token de acesso para que os
   "name": "Gustavo Martins",
   "email": "gustavomartins@gmail.com",
   "password": "123456",
-  "birthdate": "15/10/1991"
+  "birthdate": "27/12/1985"
 }
 ```
 
@@ -616,8 +694,7 @@ Rota responsável pelo login do técnico. Retorna um token de acesso para que os
   "id": 1,
   "name": "Gustavo Martins",
   "email": "gustavomartins@gmail.com",
-  "password": "123456",
-  "birthdate": "15/10/1991"
+  "birthdate": "27/12/1985"
 }
 ```
 
@@ -635,7 +712,7 @@ Rota responsável pela pesquisa de todos os técnicos registrados na API.
     "id": 1,
     "name": "Gustavo Martins",
     "email": "gustavomartins@gmail.com",
-    "birthdate": "15/10/1991"
+    "birthdate": "27/12/1985"
   }
 ]
 ```
@@ -653,7 +730,7 @@ Rota responsável por trazer os dados de um técnico, passando o id dele na rota
   "id": 1,
   "name": "Gustavo Martins",
   "email": "gustavomartins@gmail.com",
-  "birthdate": "15/10/1991"
+  "birthdate": "27/12/1985"
 }
 ```
 
@@ -710,24 +787,78 @@ Rota responsável pela atualização dos dados do técnico, passando o id do té
 
 ```json
 {
-  "id": 4,
+  "id": 1,
   "name": "Gustavo Martins Ferreira",
   "email": "gustavomartins@gmail.com",
   "birthdate": "27/12/1985"
 }
 ```
 
-#### DELETE Technician
+#### PATCH Take order
 
-Rota responsável pela remoção de um técnico da API.
+Rota responsável pelo técnico assumir um chamado em aberto. Para isso, é necessário apenas passar o id do chamado na rota e o token do técnico que ficará com aquele chamado.
+
+|              **url**               | **method** |    **status**     |
+| :--------------------------------: | :--------: | :---------------: |
+| `/technicians/take_order/order_id` |  `PATCH`   | `200 - 400 - 404` |
 
 **RESPONSE**
 
 ```json
 {
-  "id": 1,
-  "name": "Gustavo Martins",
-  "email": "gustavomartins@gmail.com",
-  "birthdate": "15/10/1991"
+  "order": {
+    "id": 1,
+    "status": "em_atendimento",
+    "type": "computador",
+    "description": "O computador apresenta falhas contínuas",
+    "release_date": "Wed, 15 Dec 2021 18:45:47 GMT",
+    "update_date": "Wed, 15 Dec 2021 18:59:47 GMT",
+    "user": {
+      "id": 2,
+      "name": "João Guilherme Filho",
+      "email": "joaoguilherme@gmail.com",
+      "position": "developer",
+      "birthdate": "01/01/2001"
+    }
+  }
+}
+```
+
+#### PATCH Finalize order
+
+Rota responsável pelo técnico finalizar aquele chamado. Para isso, é necessário apenas passar id do chamado na rota e o token do técnico que havia assumido aquele chamado.
+
+|                **url**                 | **method** |       **status**        |
+| :------------------------------------: | :--------: | :---------------------: |
+| `/technicians/finalize_order/order_id` |  `PATCH`   | `200 - 400 - 401 - 404` |
+
+**BODY**
+
+```json
+{
+  "solution": "Troca de algumas peças do computador, que estavam falhando. Todas elas foram verificadas."
+}
+```
+
+**RESPONSE**
+
+```json
+{
+  "order": {
+    "id": 1,
+    "status": "fechado",
+    "type": "computador",
+    "description": "O computador apresenta falhas contínuas",
+    "release_date": "Wed, 15 Dec 2021 18:45:47 GMT",
+    "update_date": "Wed, 15 Dec 2021 19:02:15 GMT",
+    "solution": "Troca de algumas peças do computador, que estavam falhando. Todas elas foram verificadas.",
+    "user": {
+      "id": 2,
+      "name": "João Guilherme Filho",
+      "email": "joaoguilherme@gmail.com",
+      "position": "developer",
+      "birthdate": "01/01/2001"
+    }
+  }
 }
 ```
