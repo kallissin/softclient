@@ -1,4 +1,4 @@
-from flask import jsonify, request, current_app
+from flask import json, jsonify, request, current_app
 from sqlalchemy.sql.functions import user
 from app.models.order_model import OrderModel
 from http import HTTPStatus
@@ -175,6 +175,8 @@ def delete_order(id: int):
     user_logged = get_jwt_identity()
     try:
         order = OrderModel.query.get_or_404(id)
+        if order.technician:
+            return jsonify({"message": "order already assigned cannot be deleted"}), HTTPStatus.UNAUTHORIZED
         if 'position' not in user_logged.keys():
             return jsonify({"message": "only users to place an order"}), HTTPStatus.UNAUTHORIZED
         if user_logged['id'] != order.user_id:
