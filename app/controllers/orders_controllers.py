@@ -28,13 +28,13 @@ def list_orders():
 @permission_role(('user', 'admin'))
 @jwt_required()
 def create_order():
-    user = get_jwt_identity()
+    user_logged = get_jwt_identity()
 
-    if not user['email']:
-        return jsonify({"message": "only users to place an order"})
+    if not user_logged['position']:
+        return jsonify({"message": "only users to place an order"}), HTTPStatus.UNAUTHORIZED
     try:
         data = request.json
-        data['user_id'] = user['id']
+        data['user_id'] = user_logged['id']
         OrderModel.validate(data)
         verified_data = OrderModel.check_needed_keys(data)
         new_data = OrderModel.create_order_data(verified_data)
@@ -80,9 +80,12 @@ def get_order_by_id(id: int):
         return {"Error": "Order not found."}, HTTPStatus.NOT_FOUND
     
 
-@permission_role(('user', 'tech'))
+@permission_role(('user', 'tech', 'admin'))
 @jwt_required()    
 def update_order(id: int):
+    user_logged = get_jwt_identity()
+    if not user_logged['position']:
+        return jsonify({"message": "only users to place an order"}), HTTPStatus.UNAUTHORIZED
     try:
         data = request.get_json()
         order = OrderModel.query.filter_by(id=id).first()
@@ -139,10 +142,15 @@ def get_order_by_status(order_status: str):
         return {"Error": "Not found."}, HTTPStatus.NOT_FOUND
 
 
-@permission_role(('user',))
+@permission_role(('user', 'admin'))
 @jwt_required()    
 def delete_order(id: int):
+    user_logged = get_jwt_identity()
     order = OrderModel.query.get_or_404(id)
+    if not user_logged['position']:
+        return jsonify({"message": "only users to place an order"}), HTTPStatus.UNAUTHORIZED
+    if user_logged['id'] != order.user_id:
+        return jsonify({"message": "unauthorized delete order"}), HTTPStatus.UNAUTHORIZED
     current_app.db.session.delete(order)
     current_app.db.session.commit()
     return "", HTTPStatus.OK
@@ -158,8 +166,8 @@ def get_user_by_order_id(order_id):
                 "name": order.user.name,
                 "email": order.user.email,
                 "birthdate": order.user.birthdate,
-                "registration": order.user.registration,
-                "role": order.user.role
+                "position": order.user.position,
+                "role": order.user.role.value
             }
             
         }), HTTPStatus.OK
@@ -171,14 +179,15 @@ def get_user_by_order_id(order_id):
 def get_technician_by_order_id(order_id):
     try:
         order = OrderModel.query.filter_by(id=order_id).first_or_404()
-        return jsonify({
-            "technician": {
-                "id": order.technician.id,
-                "name": order.technician.name,
-                "email": order.technician.email,
-                "registration": order.user.registration,
-                "birthdate": order.user.birthdate,
-            }
-        }), HTTPStatus.OK
+        if order.technician_id:
+            return jsonify({
+                "technician": {
+                    "id": order.technician.id,
+                    "name": order.technician.name,
+                    "email": order.technician.email,
+                    "birthdate": order.user.birthdate,
+                }
+            }), HTTPStatus.OK
+        return jsonify({"message": "order was not assigned to a technician"}), HTTPStatus.OK
     except NotFound:
-        return {"message": "Technician not found!"}, HTTPStatus.NOT_FOUND
+        return {"message": "Order not found!"}, HTTPStatus.NOT_FOUND
