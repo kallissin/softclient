@@ -6,6 +6,8 @@ from app.models.user_model import UserModel
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from http import HTTPStatus
 from app.utils.permission import permission_role
+import sqlalchemy
+import psycopg2
 
 def format_datetime(date):
     return date.strftime('%d/%m/%Y')
@@ -217,12 +219,6 @@ def create_company():
     data = request.get_json()
     cnpj_check = is_cnpj_valid(data['cnpj'])
     checklist = [ data['cnpj'], data['trading_name'].title(), data['company_name'].title() ]
-
-    companies = CompanyModel.query.all()
-
-    for company in companies:
-        if company.username == data["username"]:
-            raise ValueError
     
     try:
         if not cnpj_check:
@@ -263,9 +259,10 @@ def create_company():
     except TradingNameExistsError as err:
         return err.message
     except CompanyNameExistsError as err:
-        return err.message   
-    except ValueError:
-        return {"Error": "This username already exists"}, 409
+        return err.message
+    except sqlalchemy.exc.IntegrityError as e:
+        if type(e.orig) == psycopg2.errors.UniqueViolation:
+            return {"Error": "Username already exists!"}, 409
     
     return jsonify({
         "id": new_company.id,
