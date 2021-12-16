@@ -15,7 +15,7 @@ from app.utils.permission import permission_role
 
 
 
-@permission_role(('admin',))
+@permission_role(('super',))
 def create_technician():
     try:
         data = request.get_json()
