@@ -1,7 +1,6 @@
-from flask import request, jsonify, current_app
-from app.exceptions.owners_exceptions import KeyRequiredError
+from flask import request, jsonify
 from app.models.owner_model import OwnerModel
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import create_access_token, jwt_required
 from werkzeug.exceptions import NotFound
 from http import HTTPStatus
 from app.utils.permission import permission_role

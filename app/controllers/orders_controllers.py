@@ -1,5 +1,4 @@
 from flask import jsonify, request, current_app, send_file
-from sqlalchemy.sql.functions import user
 from app.models.order_model import OrderModel
 from http import HTTPStatus
 from werkzeug.exceptions import NotFound
@@ -94,7 +93,6 @@ def update_order(id: int):
         if not order:
             return jsonify({"msg": "order not found!"}), 404
         keys = ["type", "description"]
-        #print(data.items())
         for key, value in data.items():
         
                 if key in keys:

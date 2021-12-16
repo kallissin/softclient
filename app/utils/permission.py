@@ -9,7 +9,6 @@ def permission_role(roles):
         def decorator(*args, **kwargs):
             verify_jwt_in_request()
             claims = get_jwt()
-            print(claims)
             if claims['sub']['role'] in roles:
                 if claims['sub']['active'] == True:
                     return fn(*args, **kwargs)

@@ -6,7 +6,7 @@ import sqlalchemy
 import psycopg2
 from werkzeug.exceptions import NotFound, BadRequest
 from app.utils.cnpj_validator import cnpj_formatter
-from app.utils.format_date import format_datetime, format_date_and_time
+from app.utils.format_date import format_datetime
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from werkzeug.exceptions import Unauthorized
 from app.models.order_model import OrderModel
@@ -16,7 +16,7 @@ from app.utils.permission import permission_role
 
 
 
-@permission_role(('admin',))
+@permission_role(('super',))
 def create_technician():
     try:
         data = request.get_json()

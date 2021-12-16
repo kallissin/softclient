@@ -1,4 +1,3 @@
-from itertools import cycle
 
 LENGTH_CNPJ = 14
 

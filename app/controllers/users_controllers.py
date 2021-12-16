@@ -1,5 +1,6 @@
 from flask import request, jsonify, current_app
 from app.exceptions.users_exceptions import InvalidBirthDateError, InvalidRoleError, KeyTypeError
+from app.models.companies_model import CompanyModel
 from app.models.user_model import UserModel
 from app.models.order_model import OrderModel
 from http import HTTPStatus
@@ -8,7 +9,7 @@ from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from app.utils.permission import permission_role
-
+from pdb import set_trace
 
 def format_datetime(date):
     return date.strftime('%d/%m/%Y')
@@ -17,13 +18,19 @@ def format_datetime(date):
 @permission_role(('admin',))
 @jwt_required()
 def create_user():
-    company = get_jwt_identity()
-
+    user_logged = get_jwt_identity()
+    print(user_logged)
     try:
         data = request.get_json()
         data['active'] = True
-        data['company_id'] = company['id']
-
+        if 'email' in user_logged.keys():
+            user = UserModel.query.filter_by(id=user_logged['id']).first()
+            company = CompanyModel.query.filter_by(id=user.company.id).first()
+            data['company_id'] = company.id
+    
+        else:
+            data['company_id'] = user_logged['id']
+        
         UserModel.validate_keys(data)
         new_data = UserModel.format_data(data)
         user = UserModel(**new_data)
@@ -174,7 +181,7 @@ def get_company_by_user_id(user_id):
 @jwt_required()
 def get_orders_by_user_id(user_id):
     try:
-        orders_list = OrderModel.query.filter_by(id=user_id).all()
+        orders_list = OrderModel.query.filter_by(user_id=user_id).all()
         return jsonify([{
         "id": order.id,
         "type": order.type.value,
@@ -183,7 +190,7 @@ def get_orders_by_user_id(user_id):
         "release_date": order.release_date,
         "update_date": order.update_date,
         "solution": order.solution,
-    }for order in orders_list]), HTTPStatus.OK
+        } for order in orders_list]), HTTPStatus.OK
 
     except NotFound:
         return {"message": "user not found"}, HTTPStatus.NOT_FOUND

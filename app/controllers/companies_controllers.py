@@ -4,14 +4,14 @@ from app.utils.cnpj_validator import is_cnpj_valid, cnpj_formatter
 from app.models.companies_model import CompanyModel
 from app.models.user_model import UserModel
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-
+from http import HTTPStatus
 from app.utils.permission import permission_role
 
 def format_datetime(date):
     return date.strftime('%d/%m/%Y')
 
 # RETURNS ALL COMPANIES
-@permission_role(('super',))
+@permission_role(('super', 'tech'))
 @jwt_required()
 def get_all():
     company = CompanyModel.query.all()
@@ -71,6 +71,8 @@ def get_one(company_id: int):
         "cnpj": cnpj_formatter(company.cnpj),
         "trading_name": company.trading_name,
         "company_name": company.company_name,
+        "active": company.active,
+        "username": company.username,
         "users": new
     }), 200
     
@@ -122,6 +124,7 @@ def get_company_users(company_id: int):
             "id": item.id,
             "name": item.name,
             "email": item.email,
+            "active": item.active,
             "position": item.position,
             "birthdate": format_datetime(item.birthdate)
         }
@@ -129,32 +132,10 @@ def get_company_users(company_id: int):
     
     return jsonify(new), 200
 
-
-
-# DELETES A SINGLE COMPANY BY ID   
-@jwt_required()    
-def delete_company(company_id: int):
-    try:
-        query = CompanyModel.query.get(company_id)
-
-        if not query:
-            raise InvalidIDError
-
-        current_app.db.session.delete(query)
-        current_app.db.session.commit()
-
-        return "", 204     
-    
-    except InvalidIDError as err:
-        return err.message      
-
-
-
 # UPDATES COMPANY
 @permission_role(('admin', 'super'))
 @jwt_required()
 def update_company(company_id: int):
-    user_logged = get_jwt_identity()
     session = current_app.db.session
 
     try:
@@ -167,6 +148,11 @@ def update_company(company_id: int):
         keys = ["cnpj", "trading_name", "company_name", "role", "username", "password", "active"]
             
         for key, value in data.items():
+
+            if get_jwt_identity()["role"] == "admin":
+                if key == "active":
+                    raise ValueError
+
             if key in keys:
 
                 if key == "cnpj":
@@ -201,6 +187,7 @@ def update_company(company_id: int):
             "cnpj": cnpj_formatter(company.cnpj),
             "trading_name": company.trading_name,
             "company_name": company.company_name,
+            "active": company.active,
     }), 200
 
     except InvalidIDError as err:
@@ -217,17 +204,25 @@ def update_company(company_id: int):
         return {
             "Error": f"Allowed keys are: {keys}"
         }, 400
+    except ValueError:
+        return {"Error": "you don't have permission to update the active value"}, 400
         
         
         
        
-# CREATES A SINGLE COMPANY      
+# CREATES A SINGLE COMPANY
 def create_company():
     session = current_app.db.session
 
     data = request.get_json()
     cnpj_check = is_cnpj_valid(data['cnpj'])
     checklist = [ data['cnpj'], data['trading_name'].title(), data['company_name'].title() ]
+
+    companies = CompanyModel.query.all()
+
+    for company in companies:
+        if company.username == data["username"]:
+            raise ValueError
     
     try:
         if not cnpj_check:
@@ -268,7 +263,9 @@ def create_company():
     except TradingNameExistsError as err:
         return err.message
     except CompanyNameExistsError as err:
-        return err.message    
+        return err.message   
+    except ValueError:
+        return {"Error": "This username already exists"}, 409
     
     return jsonify({
         "id": new_company.id,
@@ -291,7 +288,7 @@ def login():
             raise FailedToLoginError
 
         if company.check_password(password):
-            return jsonify({"token": create_access_token(company)})
+            return jsonify({"token": create_access_token(company)}), HTTPStatus.OK
         
     except FailedToLoginError as err:
-        return err.message  
+        return err.message
