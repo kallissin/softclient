@@ -11,6 +11,10 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 from werkzeug.exceptions import Unauthorized
 from app.models.order_model import OrderModel
 from app.utils.permission import permission_role
+    
+
+
+
 
 @permission_role(('super',))
 def create_technician():
@@ -64,6 +68,8 @@ def create_technician():
         if type(e.orig) == psycopg2.errors.InvalidDatetimeFormat:
             return {"Error": "Formato de data inválida. Use: (%d/%m/%Y)"}
 
+
+
 @jwt_required()
 def get_technicians():
     technicians = TechnicianModel.query.order_by(
@@ -72,6 +78,8 @@ def get_technicians():
         if technician.birthdate != None:
             technician.birthdate = format_datetime(technician.birthdate)
     return jsonify(technicians), 200
+
+
 
 @jwt_required()
 def get_technician_by_id(id: int):
@@ -85,6 +93,9 @@ def get_technician_by_id(id: int):
 
     except NotFound:
         return {"Error": "Technician not found."}, 404
+
+
+
 
 @jwt_required()
 def get_orders_by_technician(id: int):
@@ -114,6 +125,9 @@ def get_orders_by_technician(id: int):
 
     except NotFound:
         return {"Error": "Technician not found."}, 404
+
+
+
 
 @jwt_required()
 def update_technician(id: int):
@@ -183,6 +197,9 @@ def update_technician(id: int):
         if type(e.orig) == psycopg2.errors.InvalidDatetimeFormat:
             return {"Error": "Formato de data inválida. Use: (%d/%m/%Y)"}
 
+
+
+
 @jwt_required()
 def take_order(order_id):
 
@@ -228,6 +245,9 @@ def take_order(order_id):
 
     except OrderAlreadyTakenError: 
         return {"Error": "the order has already been taken"}, 400 
+
+
+
 
 @jwt_required()
 def finalize_order(order_id):  
@@ -300,6 +320,10 @@ def finalize_order(order_id):
 
     except NotFound:
         return {"Error": "Order not found"}, 404
+
+
+
+
 
 def login():
     try:

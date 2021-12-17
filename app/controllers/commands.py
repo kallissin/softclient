@@ -1,10 +1,9 @@
 import click
 from flask.cli import AppGroup
-from flask import Flask, current_app, jsonify
+from flask import Flask, current_app
 from werkzeug.exceptions import NotFound
 from app.models.owner_model import OwnerModel
 from app.models.companies_model import CompanyModel
-from app.exceptions.owners_exceptions import KeyRequiredError
 from sqlalchemy.exc import IntegrityError
 from psycopg2.errors import UniqueViolation
 

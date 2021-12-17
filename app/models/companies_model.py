@@ -20,7 +20,7 @@ class CompanyModel(db.Model):
     cnpj = Column(String(18), nullable=False)
     trading_name = Column(String, nullable=False, unique=True)
     company_name = Column(String, nullable=False, unique=True)
-    username = Column(String(150), nullable=False)
+    username = Column(String(150), nullable=False, unique=True)
     password_hash = Column(String, nullable=False)
     role = Column(String(150), nullable=True)
     active = Column(Boolean, nullable=False)

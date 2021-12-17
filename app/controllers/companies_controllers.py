@@ -6,11 +6,14 @@ from app.models.user_model import UserModel
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from http import HTTPStatus
 from app.utils.permission import permission_role
+import sqlalchemy
+import psycopg2
 
 def format_datetime(date):
     return date.strftime('%d/%m/%Y')
 
 # RETURNS ALL COMPANIES
+@permission_role(('super', 'tech'))
 @jwt_required()
 def get_all():
     company = CompanyModel.query.all()
@@ -147,6 +150,11 @@ def update_company(company_id: int):
         keys = ["cnpj", "trading_name", "company_name", "role", "username", "password", "active"]
             
         for key, value in data.items():
+
+            if get_jwt_identity()["role"] == "admin":
+                if key == "active":
+                    raise ValueError
+
             if key in keys:
 
                 if key == "cnpj":
@@ -198,11 +206,13 @@ def update_company(company_id: int):
         return {
             "Error": f"Allowed keys are: {keys}"
         }, 400
+    except ValueError:
+        return {"Error": "you don't have permission to update the active value"}, 400
         
         
         
        
-# CREATES A SINGLE COMPANY      
+# CREATES A SINGLE COMPANY
 def create_company():
     session = current_app.db.session
 
@@ -249,7 +259,10 @@ def create_company():
     except TradingNameExistsError as err:
         return err.message
     except CompanyNameExistsError as err:
-        return err.message    
+        return err.message
+    except sqlalchemy.exc.IntegrityError as e:
+        if type(e.orig) == psycopg2.errors.UniqueViolation:
+            return {"Error": "Username already exists!"}, 409
     
     return jsonify({
         "id": new_company.id,
