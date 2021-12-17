@@ -273,14 +273,15 @@ def create_company():
     }), 201
     
 
-
-
 def login():
     data = request.get_json()
     password = data.pop('password')
     try:
         company: CompanyModel = CompanyModel.query.filter_by(username=data['username']).first()
         
+        if not company.active:
+            return jsonify({"message": "Unauthorized for this user scope"}), HTTPStatus.UNAUTHORIZED
+
         if not company:
             raise FailedToLoginError
 
