@@ -718,6 +718,14 @@ Rota responsável por obter os chamados, passando na rota os status disponíveis
 ]
 ```
 
+#### GET Orders Relatory
+
+Rota responsável para download de relatório de ordens com status igual a aberto e em_atendimento
+
+|      **url**       | **method** |       **status**        |
+| :----------------: | :--------: | :---------------------: |
+| `/orders/relatory` |   `GET`    |       `200 - 404`       |
+
 #### PATCH Order by id
 
 Rota responsável pela atualização de um chamado, passando o id dele na rota.
