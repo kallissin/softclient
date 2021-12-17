@@ -1,1 +1,5 @@
-# technicians_exceptions
+class InvalidKeyError(Exception):
+    ...
+
+class OrderAlreadyTakenError(Exception):
+    ...

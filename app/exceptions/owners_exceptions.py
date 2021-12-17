@@ -1,8 +1,5 @@
-class InvalidBirthDateError(Exception):
-    ...
-
-class KeyTypeError(Exception):
-    list_keys = ["name", "email", "password", "active", "role", "company_id"]
+class KeyRequiredError(Exception):
+    list_keys = ['name', 'username', 'password']
 
     def __init__(self, data: dict):
         self.message = {
@@ -12,6 +9,3 @@ class KeyTypeError(Exception):
         self.code = 400
 
         super().__init__(self.message, self.code)
-
-class InvalidRoleError(Exception):
-    ...
