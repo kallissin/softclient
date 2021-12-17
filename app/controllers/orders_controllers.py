@@ -6,7 +6,7 @@ from werkzeug.exceptions import NotFound
 from app.utils.permission import permission_role
 from app.exceptions.orders_exceptions import KeyTypeError, InvalidDate
 import sqlalchemy
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.utils.format_date import format_datetime
 from app.utils.format_date import format_date_and_time
 from reportlab.pdfgen import canvas

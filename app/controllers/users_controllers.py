@@ -9,7 +9,7 @@ from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from app.utils.permission import permission_role
-from pdb import set_trace
+
 
 def format_datetime(date):
     return date.strftime('%d/%m/%Y')
