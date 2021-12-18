@@ -4,7 +4,7 @@
 
 <br />
 
-Plataforma que registra um técnico em um equipamento de informática, para que ele possa atender chamados das empresas dando manutenção no equipamento no qual ele domina.
+Plataforma para atendimento a outras empresas que necessitam de atendimento técnico. É possível que os usuarios de empresas parceiras registrem solicitações para atendimento de seus equipamentos, tais como: computador, impressora, nobreak e notebook. E os técnicos poderão posicionar para atendimento e ir até o local para fazer a manutenção do mesmo.
 
 ### Rodando a aplicação:
 
